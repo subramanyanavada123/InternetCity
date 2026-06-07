@@ -47,3 +47,4 @@ pnpm-debug.log*
 # Optional
 *.tgz
 *.zip
+.claude/settings.json

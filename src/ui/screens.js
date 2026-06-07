@@ -100,7 +100,19 @@ export function renderModuleSelect(app, { modules, progress, onSelect, onBack, o
   s.appendChild(makeChrome('◉ FutureOS Academy', { onBack, onSettings, onMute: true }));
 
   const header = el('div', 'modules-header');
-  header.innerHTML = `<div class="modules-title">Choose a Mission</div><div class="modules-sub">Each mission teaches real engineering concepts</div>`;
+  const v2Url = 'http://' + window.location.hostname + ':4000';
+  header.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div class="modules-title">Choose a Mission</div>
+        <div class="modules-sub">Each mission teaches real engineering concepts</div>
+      </div>
+      <div style="display:inline-flex;border-radius:20px;overflow:hidden;border:1px solid rgba(70,240,192,0.2);font-size:11px;font-weight:700;">
+        <span style="padding:7px 14px;background:rgba(70,240,192,0.15);color:#46f0c0;border-right:1px solid rgba(70,240,192,0.15);">V1 Classic</span>
+        <a href="${v2Url}" style="padding:7px 14px;text-decoration:none;color:#8aa6b4;transition:color 0.2s;" onmouseover="this.style.color='#46f0c0'" onmouseout="this.style.color='#8aa6b4'">V2 New ✦</a>
+      </div>
+    </div>
+  `;
   s.appendChild(header);
 
   const grid = el('div', 'modules-grid');
