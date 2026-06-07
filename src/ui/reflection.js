@@ -252,7 +252,7 @@ export class ReflectionPhase {
         this._answers[prompt.id] = { text: ta.value, dimension: prompt.dimension };
         chars.textContent = ta.value.length;
 
-        const answered = Object.values(this._answers).filter(a => a.text.trim().length > 10).length;
+        const answered = Object.values(this._answers).filter(a => a.text.trim().length > 0).length;
         const total = data.prompts.length;
         if (answered >= 1) {
           doneBtn.disabled = false;
