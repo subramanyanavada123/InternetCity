@@ -87,9 +87,10 @@ export class CanvasRenderer {
     return this._px(node.x, node.y);
   }
 
-  render(net, packets, { scopeNode = null } = {}) {
+  render(net, packets, { scopeNode = null, highlightNode = null, highlightEdge = null, accentColor = null, offlineNodes = null, packetColors = null } = {}) {
     const ctx = this.ctx;
     const W = this._w, H = this._h;
+    const accent = accentColor || C.linkHot;
     // ── Background ────────────────────────────────────────────────────
     const grad = ctx.createLinearGradient(0, 0, W, H);
     grad.addColorStop(0, C.bg0);
@@ -218,10 +219,11 @@ export class CanvasRenderer {
       ctx.save();
       ctx.globalAlpha = alpha;
 
+      const overrideColor = packetColors && packetColors.get(pkt.id);
       const color = dead
         ? (isLoop ? C.loop : C.dying)
         : delivered ? '#ffffff'
-        : C.packet;
+        : overrideColor || C.packet;
 
       // outer glow
       ctx.shadowBlur = dead ? 0 : 12;
@@ -251,13 +253,36 @@ export class CanvasRenderer {
     for (const node of net.nodes.values()) {
       const p = this._px(node.x, node.y);
       const inScope = !scopeNeighborIds || scopeNeighborIds.has(node.id);
+      const isOffline = offlineNodes && offlineNodes.has(node.id);
+      const isHighlighted = highlightNode === node.id;
       const dimAlpha = inScope ? 1 : 0.22;
 
       ctx.save();
       ctx.globalAlpha = dimAlpha;
 
-      const col = C.node[node.type] || C.node.router;
-      const glow = C.nodeGlow[node.type] || 'rgba(138,166,180,0.2)';
+      const col = isOffline ? '#ff6b6b' : isHighlighted ? accent : (C.node[node.type] || C.node.router);
+      const glow = isOffline ? 'rgba(255,107,107,0.3)' : isHighlighted ? `${accent}55` : (C.nodeGlow[node.type] || 'rgba(138,166,180,0.2)');
+
+      // extra selection ring for highlighted node
+      if (isHighlighted) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, NODE_R + 14, 0, Math.PI * 2);
+        ctx.strokeStyle = accent;
+        ctx.globalAlpha = dimAlpha * 0.3;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = dimAlpha;
+      }
+
+      // offline X overlay
+      if (isOffline) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, NODE_R + 12, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,107,107,0.08)';
+        ctx.fill();
+      }
 
       // halo glow
       ctx.beginPath();
@@ -269,7 +294,7 @@ export class CanvasRenderer {
       ctx.beginPath();
       ctx.arc(p.x, p.y, NODE_R, 0, Math.PI * 2);
       ctx.strokeStyle = col;
-      ctx.lineWidth = inScope && scopeNeighborIds && node.id === scopeNode ? 3 : 1.5;
+      ctx.lineWidth = isHighlighted ? 3 : (inScope && scopeNeighborIds && node.id === scopeNode ? 3 : 1.5);
       ctx.stroke();
 
       // inner fill
@@ -304,8 +329,18 @@ export class CanvasRenderer {
       const tw = ctx.measureText(label).width;
       ctx.fillStyle = C.labelBg;
       ctx.fillRect(lx - tw / 2 - 3, ly - 1, tw + 6, 14);
-      ctx.fillStyle = inScope ? C.text : C.textDim;
+      ctx.fillStyle = isOffline ? '#ff6b6b' : (inScope ? C.text : C.textDim);
       ctx.fillText(label, lx, ly);
+
+      // offline badge
+      if (isOffline) {
+        ctx.font = 'bold 13px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ff6b6b';
+        ctx.globalAlpha = dimAlpha * 0.9;
+        ctx.fillText('✕', p.x, p.y);
+      }
 
       ctx.restore();
     }

@@ -98,6 +98,38 @@ function makeStepTracker(parent, steps) {
   };
 }
 
+function makeGoalBar(parent, { label = 'Goal', color = '#46f0c0', target = 100 } = {}) {
+  const el = document.createElement('div');
+  el.style.cssText = `
+    position:absolute;bottom:52px;left:50%;transform:translateX(-50%);
+    width:min(340px,85%);z-index:50;
+    background:rgba(7,26,36,0.9);border:1px solid ${color}33;
+    border-radius:10px;padding:8px 14px;backdrop-filter:blur(6px);
+  `;
+  parent.appendChild(el);
+  return {
+    el,
+    update(current) {
+      const pct = Math.min(Math.round(current), 100);
+      const barW = Math.round(pct);
+      const reached = pct >= target;
+      el.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+          <span style="font-size:11px;color:${color};font-weight:700;letter-spacing:1px;">${label}</span>
+          <span style="font-size:11px;color:#8aa6b4;margin-left:auto;">${pct}% / ${target}% needed</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.07);border-radius:4px;height:8px;overflow:hidden;">
+          <div style="width:${barW}%;height:100%;border-radius:4px;
+            background:${reached ? color : color};
+            box-shadow:0 0 8px ${color}88;
+            transition:width 0.4s ease;"></div>
+        </div>
+        ${reached ? `<div style="font-size:10px;color:${color};margin-top:4px;text-align:right;">✔ Goal reached!</div>` : ''}
+      `;
+    },
+  };
+}
+
 function showConceptReveal(parent, text, onContinue) {
   const overlay = document.createElement('div');
   overlay.style.cssText = `
@@ -399,6 +431,7 @@ class Game {
     const crisisUI = new CrisisBanner(canvasWrap);
     const instr    = makeInstructionBox(canvasWrap);
     const steps    = makeStepTracker(canvasWrap, 3);
+    const goalBar  = makeGoalBar(canvasWrap, { label: '🏥 Emergency Uptime', color: '#ffb454', target: 75 });
 
     let step = 1, crisisFired = false, goalMet = false, tick = 0, selectedRouter = null;
     let reroutes = 0, bottleneckIdentified = false;
@@ -406,7 +439,7 @@ class Game {
     const STEPS = [
       { action: '👀 Watch the dots — that\'s data moving through the network.', why: 'Green = fine. Red/orange = congested. Festival starts soon!' },
       { action: '🎉 FESTIVAL! Traffic surged. 👆 TAP a Router ○ on the canvas.', why: 'When a link is full, packets queue up then DROP. Emergency services must stay online!' },
-      { action: '✔ Use the right panel to pick a less-busy path for this router.', why: '📡 CS concept: a QUEUE. Data waits in line. If the queue overflows → data is lost.' },
+      { action: '✔ Panel on right: pick a less-busy path for the selected router.', why: '📡 Data waits in a QUEUE. If the queue overflows → data is lost. Route emergencies to free links.' },
     ];
 
     const setStep = (n, label) => {
@@ -562,6 +595,7 @@ class Game {
 
         const uptimeRatio = twin.getEmergencyUptimeRatio();
         const upPct       = Math.round(uptimeRatio * 100);
+        if (crisisFired) goalBar.update(upPct);
 
         if (crisisFired && !goalMet && tick > 140 && uptimeRatio >= 0.75) {
           goalMet = true;
@@ -596,7 +630,7 @@ class Game {
         }
       },
       onRender: (_alpha) => {
-        renderer.render(net, pkts.getLiving(), {});
+        renderer.render(net, pkts.getLiving(), { highlightNode: selectedRouter, accentColor: '#ffb454' });
       },
     });
     loop.start();
@@ -635,14 +669,27 @@ class Game {
     const crisisUI = new CrisisBanner(canvasWrap);
     const instr    = makeInstructionBox(canvasWrap);
     const steps    = makeStepTracker(canvasWrap, 3);
+    const goalBar  = makeGoalBar(canvasWrap, { label: '🚨 Triage Score', color: '#ff6b6b', target: 60 });
 
     makeBackBtn(canvasWrap, () => { this._destroySim(); this.showModuleSelect(); });
 
-    // Priority queue state
+    // Priority queue state — track which node source is "active" for canvas highlight
     const PRIORITY_TYPES = ['emergency', 'critical', 'normal'];
     const queue = [];
     let triageScore = 0, triageTotal = 0;
     let crisisFired = false, goalMet = false, tick = 0;
+    let highlightedNode = null; // canvas highlight for currently-processed item
+
+    // Packet colors for canvas: emergency=red, critical=orange, normal=green
+    const pktColorMap = new Map();
+
+    // Map packet type → source node ids for canvas highlighting
+    const typeSourceMap = { emergency: [], critical: [], normal: [] };
+    (mod.city?.nodes || []).forEach(n => {
+      if (n.type === 'emergency') typeSourceMap.emergency.push(n.id);
+      else if (n.type === 'hospital') typeSourceMap.critical.push(n.id);
+      else typeSourceMap.normal.push(n.id);
+    });
 
     // Triage panel in side panel
     const triageBox = document.createElement('div');
@@ -650,14 +697,16 @@ class Game {
     sidePanel.appendChild(triageBox);
 
     const renderTriagePanel = () => {
+      const score = triageTotal ? Math.round((triageScore / triageTotal) * 100) : 0;
+      goalBar.update(score);
       triageBox.innerHTML = `
-        <div style="font-size:11px;color:#46f0c0;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
-          ◈ Incoming Queue
+        <div style="font-size:11px;color:#ff6b6b;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">
+          🚨 Incoming Queue
         </div>
-        <div style="font-size:10px;color:#8aa6b4;margin-bottom:8px;">Drag or tap to reorder. Emergencies first.</div>
+        <div style="font-size:10px;color:#8aa6b4;margin-bottom:8px;">Press ↑ to move emergencies to the front.</div>
         <div id="triage-queue" style="display:flex;flex-direction:column;gap:4px;min-height:40px;"></div>
         <div style="margin-top:10px;font-size:10px;color:#8aa6b4;">
-          Triage score: <span style="color:#46f0c0;font-weight:700;">${triageTotal ? Math.round((triageScore/triageTotal)*100) : 0}%</span>
+          Triage score: <span style="color:#ff6b6b;font-weight:700;">${score}%</span>
         </div>
       `;
       const queueEl = triageBox.querySelector('#triage-queue');
@@ -688,6 +737,12 @@ class Game {
             e.stopPropagation();
             const item = queue.splice(idx, 1)[0];
             queue.splice(idx - 1, 0, item);
+            // Highlight source node on canvas for this packet type
+            const srcIds = typeSourceMap[item.type] || [];
+            if (srcIds.length) {
+              highlightedNode = srcIds[Math.floor(Math.random() * srcIds.length)];
+              setTimeout(() => { highlightedNode = null; }, 1200);
+            }
             // Score the triage decision
             if (item.type === 'emergency' && idx - 1 === 0) {
               triageScore++;
@@ -757,6 +812,15 @@ class Game {
 
         if (tick % 15 === 0 && crisisFired) spawnPacket();
 
+        // Color-tag living packets by their source type for canvas
+        pkts.getLiving().forEach(p => {
+          const src = net.getNode(p.from);
+          if (!src) return;
+          if (src.type === 'emergency') pktColorMap.set(p.id, '#ff6b6b');
+          else if (src.type === 'hospital') pktColorMap.set(p.id, '#ffb454');
+          else pktColorMap.set(p.id, '#46f0c0');
+        });
+
         // Auto-process front of queue every 2 seconds
         if (tick % 40 === 0 && queue.length) {
           const item = queue.shift();
@@ -797,7 +861,7 @@ class Game {
         }
       },
       onRender: () => {
-        renderer.render(net, pkts.getLiving(), {});
+        renderer.render(net, pkts.getLiving(), { highlightNode: highlightedNode, accentColor: '#ff6b6b', packetColors: pktColorMap });
       },
     });
 
@@ -838,6 +902,7 @@ class Game {
     const crisisUI = new CrisisBanner(canvasWrap);
     const instr    = makeInstructionBox(canvasWrap);
     const steps    = makeStepTracker(canvasWrap, 4);
+    const goalBar  = makeGoalBar(canvasWrap, { label: '⚡ Buildings Online', color: '#c9b6ff', target: 80 });
 
     makeBackBtn(canvasWrap, () => { this._destroySim(); this.showModuleSelect(); });
 
@@ -845,6 +910,7 @@ class Game {
     let crisisFired = false, goalMet = false, tick = 0;
     let backupLinksAdded = 0, singlePointsFixed = 0;
     let selectedNode = null;
+    let offlineNodeSet = new Set();
 
     // Track which nodes are online
     const getOfflineNodes = () => {
@@ -875,6 +941,9 @@ class Game {
     const renderBackupPanel = () => {
       const offline = getOfflineNodes();
       const allNodes = net.nodes ? [...net.nodes.values()] : [];
+      offlineNodeSet = new Set(offline.map(n => n.id));
+      const onlinePct = Math.round(((allNodes.length - offline.length) / Math.max(allNodes.length, 1)) * 100);
+      goalBar.update(onlinePct);
       backupBox.innerHTML = `
         <div style="font-size:11px;color:#c9b6ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
           ⚡ Network Status
@@ -883,9 +952,9 @@ class Game {
           Online: <span style="color:#46f0c0">${allNodes.length - offline.length}/${allNodes.length}</span>
         </div>
         ${offline.length > 0 ? `
-          <div style="font-size:11px;color:#ff6b6b;margin-bottom:8px;">Offline: ${offline.map(n => n.label).join(', ')}</div>
+          <div style="font-size:11px;color:#ff6b6b;margin-bottom:8px;">✕ Offline: ${offline.map(n => n.label).join(', ')}</div>
+          <div style="font-size:10px;color:#c9b6ff;margin-bottom:4px;">👆 Tap two nodes on the canvas to draw a backup link.</div>
         ` : '<div style="font-size:11px;color:#46f0c0;margin-bottom:8px;">All buildings online ✔</div>'}
-        <div style="font-size:10px;color:#8aa6b4;margin-top:8px;">Tap a node on the canvas to add a backup link from it.</div>
         <div style="font-size:10px;color:#c9b6ff;margin-top:4px;">Backup links added: <strong>${backupLinksAdded}</strong></div>
       `;
     };
@@ -996,7 +1065,7 @@ class Game {
         }
       },
       onRender: () => {
-        renderer.render(net, pkts.getLiving(), {});
+        renderer.render(net, pkts.getLiving(), { highlightNode: selectedNode, accentColor: '#c9b6ff', offlineNodes: offlineNodeSet });
       },
     });
 
@@ -1037,12 +1106,14 @@ class Game {
     const crisisUI = new CrisisBanner(canvasWrap);
     const instr    = makeInstructionBox(canvasWrap);
     const steps    = makeStepTracker(canvasWrap, 3);
+    const goalBar  = makeGoalBar(canvasWrap, { label: '⊛ Firewall Accuracy', color: '#ff6b6b', target: 70 });
 
     makeBackBtn(canvasWrap, () => { this._destroySim(); this.showModuleSelect(); });
 
     let crisisFired = false, goalMet = false, tick = 0;
     let blocked = 0, falsePositives = 0, attacksThrough = 0;
     const STREAM_SIZE = 10;
+    const cyberPktColors = new Map(); // pkt.id → color (red=malicious, green=real)
 
     // Packet stream state
     let stream = [];
@@ -1180,6 +1251,14 @@ class Game {
           (p.real && p.decision === 'allow') || (!p.real && p.decision === 'block')
         )).length;
         const accuracy = totalDecided ? correctDecisions / totalDecided : 0;
+        if (crisisFired) goalBar.update(Math.round(accuracy * 100));
+
+        // Color-tag packets on canvas: red=fake/malicious, green=real
+        pkts.getLiving().forEach(p => {
+          if (!cyberPktColors.has(p.id)) {
+            cyberPktColors.set(p.id, Math.random() < (mod.crisisEvent?.fakeRatio || 0.4) ? '#ff6b6b' : '#46f0c0');
+          }
+        });
 
         if (crisisFired && !goalMet && totalDecided >= 15 && accuracy >= 0.7) {
           goalMet = true;
@@ -1206,7 +1285,7 @@ class Game {
         }
       },
       onRender: () => {
-        renderer.render(net, pkts.getLiving(), {});
+        renderer.render(net, pkts.getLiving(), { accentColor: '#ff6b6b', packetColors: cyberPktColors });
       },
     });
     loop.start();
@@ -1246,6 +1325,7 @@ class Game {
     const crisisUI = new CrisisBanner(canvasWrap);
     const instr    = makeInstructionBox(canvasWrap);
     const steps    = makeStepTracker(canvasWrap, 4);
+    const goalBar  = makeGoalBar(canvasWrap, { label: '⊙ Performance Score', color: '#7fd8ff', target: 75 });
 
     makeBackBtn(canvasWrap, () => { this._destroySim(); this.showModuleSelect(); });
 
@@ -1366,6 +1446,7 @@ class Game {
         // Goal: performance recovers (drops decline)
         const drops = pkts.stats?.dropped || 0;
         const ratio = twin.getConnectivityRatio();
+        if (crisisFired) goalBar.update(Math.round(ratio * 100));
         if (crisisFired && !goalMet && upgradesApplied >= 3 && drops < 5 && ratio > 0.7) {
           goalMet = true;
           loop.pause();
@@ -1390,7 +1471,7 @@ class Game {
         }
       },
       onRender: () => {
-        renderer.render(net, pkts.getLiving(), {});
+        renderer.render(net, pkts.getLiving(), { accentColor: '#7fd8ff' });
       },
     });
     loop.start();
