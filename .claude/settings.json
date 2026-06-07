@@ -12,7 +12,8 @@
     ],
     "additionalDirectories": [
       "/home/user/internet-city/InternetCityV2/src",
-      "/home/user/internet-city/InternetCityV2"
+      "/home/user/internet-city/InternetCityV2",
+      "/home/user/internet-city"
     ]
   }
 }
