@@ -1,0 +1,175 @@
+{
+  "worlds": [
+    {
+      "id": 1,
+      "title": "Distributed Routing",
+      "emoji": "◈",
+      "concept": "routing",
+      "conceptReveal": "That's distributed routing — each router only knows its neighbors, but the message still gets through!",
+      "scenarios": [
+        {
+          "id": "w1_s1",
+          "title": "Your First Route",
+          "mechanic": "routing",
+          "goal": { "type": "deliveryRate", "target": 0.5, "label": "Deliver 50% of packets" },
+          "coach": [
+            { "trigger": "start",    "key": "w1s1_start",    "text": "Each router only knows its neighbors. Tap a router, then pick which neighbor it should send packets to." },
+            { "trigger": "firstRule","key": "w1s1_rule",     "text": "A rule is set! Packets will now follow it. Set rules for the other routers to build a path." },
+            { "trigger": "firstDelivery","key":"w1s1_del",   "text": "Delivered! You never drew a path — it emerged from local rules." },
+            { "trigger": "goalMet",  "key": "w1s1_goal",     "text": "That's routing — each router forwards based only on what it knows. No one has the full map!" }
+          ],
+          "nodes": [
+            { "id": 0, "type": "home",   "x": 0.12, "y": 0.50, "label": "Maya" },
+            { "id": 1, "type": "router", "x": 0.35, "y": 0.25, "label": "R1" },
+            { "id": 2, "type": "router", "x": 0.35, "y": 0.75, "label": "R2" },
+            { "id": 3, "type": "router", "x": 0.65, "y": 0.50, "label": "R3" },
+            { "id": 4, "type": "server", "x": 0.88, "y": 0.50, "label": "Server" }
+          ],
+          "edges": [
+            { "a": 0, "b": 1, "capacity": 4 },
+            { "a": 0, "b": 2, "capacity": 4 },
+            { "a": 1, "b": 3, "capacity": 4 },
+            { "a": 2, "b": 3, "capacity": 4 },
+            { "a": 3, "b": 4, "capacity": 4 }
+          ],
+          "senders": [{ "node": 0, "rate": 0.6 }],
+          "preset": { "rules": { "4": null }, "downLinks": [] }
+        },
+        {
+          "id": "w1_s2",
+          "title": "The Loop",
+          "mechanic": "routing",
+          "goal": { "type": "deliveryRate", "target": 0.6, "label": "Fix the loop — deliver 60%" },
+          "coach": [
+            { "trigger": "start",     "key": "w1s2_start",  "text": "Watch — two routers are pointing at each other. Packets will loop until their time-to-live expires." },
+            { "trigger": "firstLoop", "key": "w1s2_loop",   "text": "A routing loop! The packet goes in circles. TTL is counting down — when it hits zero, the packet dies." },
+            { "trigger": "firstDelivery","key":"w1s2_del",  "text": "You broke the loop by updating a rule. No single router could see the loop — but you could." },
+            { "trigger": "goalMet",   "key": "w1s2_goal",   "text": "Routing loops happen when rules disagree. That's why TTL — time-to-live — exists!" }
+          ],
+          "nodes": [
+            { "id": 0, "type": "home",   "x": 0.10, "y": 0.50, "label": "Maya" },
+            { "id": 1, "type": "router", "x": 0.38, "y": 0.28, "label": "R1" },
+            { "id": 2, "type": "router", "x": 0.60, "y": 0.28, "label": "R2" },
+            { "id": 3, "type": "router", "x": 0.49, "y": 0.68, "label": "R3" },
+            { "id": 4, "type": "server", "x": 0.86, "y": 0.50, "label": "Server" }
+          ],
+          "edges": [
+            { "a": 0, "b": 1, "capacity": 4 },
+            { "a": 0, "b": 3, "capacity": 4 },
+            { "a": 1, "b": 2, "capacity": 4 },
+            { "a": 2, "b": 1, "capacity": 4 },
+            { "a": 2, "b": 4, "capacity": 4 },
+            { "a": 3, "b": 4, "capacity": 4 }
+          ],
+          "senders": [{ "node": 0, "rate": 0.7 }],
+          "preset": { "rules": { "0": 1, "1": 2, "2": 1, "3": 4 }, "downLinks": [] }
+        },
+        {
+          "id": "w1_s3",
+          "title": "The Heal",
+          "mechanic": "routing",
+          "goal": { "type": "deliveryRate", "target": 0.7, "label": "Heal the network — deliver 70%" },
+          "coach": [
+            { "trigger": "start",      "key": "w1s3_start", "text": "A link is about to fail. Watch what happens to packets on that route." },
+            { "trigger": "linkDown",   "key": "w1s3_down",  "text": "The link is down — packets are stranded. Re-point the routers to find a new path!" },
+            { "trigger": "firstDelivery","key":"w1s3_heal", "text": "The network healed! You rerouted around the failure. This is how the internet survives broken cables." },
+            { "trigger": "goalMet",    "key": "w1s3_goal",  "text": "That's fault tolerance — the internet routes around damage by updating local rules." }
+          ],
+          "nodes": [
+            { "id": 0, "type": "home",   "x": 0.10, "y": 0.50, "label": "Maya" },
+            { "id": 1, "type": "router", "x": 0.33, "y": 0.22, "label": "R1" },
+            { "id": 2, "type": "router", "x": 0.55, "y": 0.22, "label": "R2" },
+            { "id": 3, "type": "router", "x": 0.33, "y": 0.78, "label": "R3" },
+            { "id": 4, "type": "router", "x": 0.55, "y": 0.78, "label": "R4" },
+            { "id": 5, "type": "server", "x": 0.88, "y": 0.50, "label": "Server" }
+          ],
+          "edges": [
+            { "a": 0, "b": 1, "capacity": 4 },
+            { "a": 0, "b": 3, "capacity": 4 },
+            { "a": 1, "b": 2, "capacity": 4 },
+            { "a": 2, "b": 5, "capacity": 4 },
+            { "a": 3, "b": 4, "capacity": 4 },
+            { "a": 4, "b": 5, "capacity": 4 },
+            { "a": 1, "b": 4, "capacity": 3 },
+            { "a": 2, "b": 4, "capacity": 3 }
+          ],
+          "senders": [{ "node": 0, "rate": 0.8 }],
+          "preset": { "rules": { "0": 1, "1": 2, "2": 5, "3": 4, "4": 5 }, "downLinks": [] },
+          "timedEvent": { "tick": 80, "type": "linkDown", "a": 2, "b": 5 }
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Congestion Control",
+      "emoji": "⟳",
+      "concept": "congestion",
+      "conceptReveal": "That's congestion control — the internet slows down instead of crashing!",
+      "scenarios": [
+        {
+          "id": "w2_s1",
+          "title": "The Bottleneck",
+          "mechanic": "congestion",
+          "goal": { "type": "deliveryRate", "target": 0.6, "label": "Keep delivery rate above 60%" },
+          "coach": [
+            { "trigger": "start",       "key": "w2s1_start", "text": "Crank up the send rate — watch what happens to the shared link." },
+            { "trigger": "firstLoss",   "key": "w2s1_loss",  "text": "Packets are dropping! The link is saturated. Watch the rate chart — the sender backs off automatically." },
+            { "trigger": "backoff",     "key": "w2s1_back",  "text": "The sender backed off. See the sawtooth? That's AIMD — additive increase, multiplicative decrease. Real TCP." },
+            { "trigger": "goalMet",     "key": "w2s1_goal",  "text": "Congestion control — senders sense loss and back off, then slowly ramp up. The network self-regulates!" }
+          ],
+          "nodes": [
+            { "id": 0, "type": "home",   "x": 0.12, "y": 0.35, "label": "Sender A", "rate": 1.0 },
+            { "id": 1, "type": "home",   "x": 0.12, "y": 0.65, "label": "Sender B", "rate": 1.0 },
+            { "id": 2, "type": "router", "x": 0.42, "y": 0.50, "label": "R1", "bufferCap": 6 },
+            { "id": 3, "type": "router", "x": 0.68, "y": 0.50, "label": "R2" },
+            { "id": 4, "type": "server", "x": 0.88, "y": 0.50, "label": "Server" }
+          ],
+          "edges": [
+            { "a": 0, "b": 2, "capacity": 5 },
+            { "a": 1, "b": 2, "capacity": 5 },
+            { "a": 2, "b": 3, "capacity": 3 },
+            { "a": 3, "b": 4, "capacity": 5 }
+          ],
+          "senders": [
+            { "node": 0, "rate": 1.0 },
+            { "node": 1, "rate": 1.0 }
+          ],
+          "preset": { "rules": { "0": 2, "1": 2, "2": 3, "3": 4 }, "downLinks": [] }
+        },
+        {
+          "id": "w2_s2",
+          "title": "Collapse",
+          "mechanic": "congestion",
+          "goal": { "type": "deliveryRate", "target": 0.55, "label": "Recover from collapse — deliver 55%" },
+          "coach": [
+            { "trigger": "start",     "key": "w2s2_start", "text": "Push all three senders to maximum. What happens when everyone floods the network?" },
+            { "trigger": "collapse",  "key": "w2s2_coll",  "text": "Congestion collapse! Tons of packets sent, almost none delivered. Reduce the rates to recover." },
+            { "trigger": "recovery",  "key": "w2s2_rec",   "text": "The network is recovering. Congestion control is why the real internet doesn't permanently collapse." },
+            { "trigger": "goalMet",   "key": "w2s2_goal",  "text": "You experienced congestion collapse and pulled the internet back from the edge!" }
+          ],
+          "nodes": [
+            { "id": 0, "type": "home",   "x": 0.10, "y": 0.22, "label": "A", "rate": 0.8 },
+            { "id": 1, "type": "home",   "x": 0.10, "y": 0.50, "label": "B", "rate": 0.8 },
+            { "id": 2, "type": "home",   "x": 0.10, "y": 0.78, "label": "C", "rate": 0.8 },
+            { "id": 3, "type": "router", "x": 0.40, "y": 0.50, "label": "Core", "bufferCap": 5 },
+            { "id": 4, "type": "router", "x": 0.68, "y": 0.50, "label": "R2" },
+            { "id": 5, "type": "server", "x": 0.88, "y": 0.50, "label": "Server" }
+          ],
+          "edges": [
+            { "a": 0, "b": 3, "capacity": 4 },
+            { "a": 1, "b": 3, "capacity": 4 },
+            { "a": 2, "b": 3, "capacity": 4 },
+            { "a": 3, "b": 4, "capacity": 2 },
+            { "a": 4, "b": 5, "capacity": 5 }
+          ],
+          "senders": [
+            { "node": 0, "rate": 0.8 },
+            { "node": 1, "rate": 0.8 },
+            { "node": 2, "rate": 0.8 }
+          ],
+          "preset": { "rules": { "0": 3, "1": 3, "2": 3, "3": 4, "4": 5 }, "downLinks": [] }
+        }
+      ]
+    }
+  ]
+}

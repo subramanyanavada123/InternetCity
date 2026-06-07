@@ -1,0 +1,173 @@
+{
+  "modules": [
+    {
+      "id": 1,
+      "title": "Connectivity",
+      "subtitle": "Build a connected city",
+      "icon": "◈",
+      "color": "#46f0c0",
+      "concept": "Networks & Graphs",
+      "conceptReveal": "You just built a graph! Every building is a node, every link is an edge. That's how the internet works.",
+      "description": "95% of buildings must be connected to the network.",
+      "goal": { "type": "connectivity", "target": 0.95 },
+      "crisisEvent": null,
+      "city": {
+        "nodes": [
+          { "id": 0,  "type": "datacenter",  "x": 0.50, "y": 0.50, "label": "Core DC",      "emoji": "▣" },
+          { "id": 1,  "type": "tower",       "x": 0.25, "y": 0.25, "label": "Tower N",      "emoji": "◈" },
+          { "id": 2,  "type": "tower",       "x": 0.75, "y": 0.25, "label": "Tower E",      "emoji": "◈" },
+          { "id": 3,  "type": "tower",       "x": 0.25, "y": 0.75, "label": "Tower W",      "emoji": "◈" },
+          { "id": 4,  "type": "tower",       "x": 0.75, "y": 0.75, "label": "Tower S",      "emoji": "◈" },
+          { "id": 5,  "type": "hospital",    "x": 0.15, "y": 0.50, "label": "Hospital",     "emoji": "⊕" },
+          { "id": 6,  "type": "school",      "x": 0.38, "y": 0.18, "label": "School",       "emoji": "⊞" },
+          { "id": 7,  "type": "energy",      "x": 0.62, "y": 0.18, "label": "Solar Farm",   "emoji": "☀" },
+          { "id": 8,  "type": "residential", "x": 0.85, "y": 0.50, "label": "Homes",        "emoji": "⌂" },
+          { "id": 9,  "type": "emergency",   "x": 0.38, "y": 0.82, "label": "Fire Stn",     "emoji": "⊛" },
+          { "id": 10, "type": "residential", "x": 0.62, "y": 0.82, "label": "Homes S",      "emoji": "⌂" },
+          { "id": 11, "type": "router",      "x": 0.38, "y": 0.50, "label": "Router W",     "emoji": "○" },
+          { "id": 12, "type": "router",      "x": 0.62, "y": 0.50, "label": "Router E",     "emoji": "○" }
+        ],
+        "links": [
+          { "a": 0,  "b": 11, "type": "fiber",    "capacity": 8, "up": true },
+          { "a": 0,  "b": 12, "type": "fiber",    "capacity": 8, "up": true },
+          { "a": 11, "b": 1,  "type": "wireless", "capacity": 4, "up": true },
+          { "a": 11, "b": 3,  "type": "wireless", "capacity": 4, "up": true },
+          { "a": 12, "b": 2,  "type": "wireless", "capacity": 4, "up": true },
+          { "a": 12, "b": 4,  "type": "wireless", "capacity": 4, "up": true },
+          { "a": 1,  "b": 5,  "type": "wireless", "capacity": 3, "up": false },
+          { "a": 1,  "b": 6,  "type": "wireless", "capacity": 3, "up": false },
+          { "a": 2,  "b": 7,  "type": "wireless", "capacity": 3, "up": false },
+          { "a": 2,  "b": 8,  "type": "wireless", "capacity": 3, "up": false },
+          { "a": 3,  "b": 9,  "type": "wireless", "capacity": 3, "up": false },
+          { "a": 4,  "b": 10, "type": "wireless", "capacity": 3, "up": false }
+        ],
+        "unconnectedNodes": [5, 6, 7, 8, 9, 10]
+      },
+      "coach": [
+        { "trigger": "start",       "text": "Year 2050. You are a city infrastructure engineer. Your city needs a communication network. Tap a tower, then connect it to buildings nearby." },
+        { "trigger": "firstLink",   "text": "A link is live! Data can now flow between these nodes. Keep connecting — the city needs 95% coverage." },
+        { "trigger": "halfConnected","text": "Half the city is online. Can you see how the network is forming? Each new link creates new paths." },
+        { "trigger": "goalMet",     "text": "The city is connected! Every building can now communicate. You just built a graph — nodes and edges, just like the internet itself." }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Traffic & Congestion",
+      "subtitle": "A festival creates a demand surge",
+      "icon": "⟳",
+      "color": "#ffb454",
+      "concept": "Queues & Throughput",
+      "conceptReveal": "When too many packets arrive at once, they queue. When the queue overflows, data drops. That's congestion — and it happens on the real internet every day.",
+      "description": "Keep emergency services operational during peak demand.",
+      "goal": { "type": "emergencyUptime", "target": 0.80 },
+      "crisisEvent": { "type": "festival", "tick": 60, "label": "🎉 City Festival — traffic surging!", "loadMultiplier": 3.5 },
+      "city": {
+        "nodes": [
+          { "id": 0,  "type": "datacenter",  "x": 0.50, "y": 0.50, "label": "Core DC",    "emoji": "▣" },
+          { "id": 1,  "type": "tower",       "x": 0.25, "y": 0.25, "label": "Tower N",    "emoji": "◈" },
+          { "id": 2,  "type": "tower",       "x": 0.75, "y": 0.25, "label": "Tower E",    "emoji": "◈" },
+          { "id": 3,  "type": "tower",       "x": 0.25, "y": 0.75, "label": "Tower W",    "emoji": "◈" },
+          { "id": 4,  "type": "tower",       "x": 0.75, "y": 0.75, "label": "Tower S",    "emoji": "◈" },
+          { "id": 5,  "type": "hospital",    "x": 0.15, "y": 0.42, "label": "Hospital",   "emoji": "⊕" },
+          { "id": 6,  "type": "emergency",   "x": 0.15, "y": 0.58, "label": "Fire Stn",   "emoji": "⊛" },
+          { "id": 7,  "type": "residential", "x": 0.50, "y": 0.15, "label": "Festival",   "emoji": "⌂" },
+          { "id": 8,  "type": "residential", "x": 0.85, "y": 0.50, "label": "Homes E",    "emoji": "⌂" },
+          { "id": 9,  "type": "router",      "x": 0.38, "y": 0.50, "label": "Router",     "emoji": "○" },
+          { "id": 10, "type": "router",      "x": 0.62, "y": 0.50, "label": "Router E",   "emoji": "○" }
+        ],
+        "links": [
+          { "a": 0,  "b": 9,  "type": "fiber",    "capacity": 6, "up": true },
+          { "a": 0,  "b": 10, "type": "fiber",    "capacity": 6, "up": true },
+          { "a": 9,  "b": 1,  "type": "wireless", "capacity": 4, "up": true },
+          { "a": 9,  "b": 3,  "type": "wireless", "capacity": 4, "up": true },
+          { "a": 10, "b": 2,  "type": "wireless", "capacity": 4, "up": true },
+          { "a": 10, "b": 4,  "type": "wireless", "capacity": 4, "up": true },
+          { "a": 1,  "b": 5,  "type": "wireless", "capacity": 3, "up": true },
+          { "a": 1,  "b": 6,  "type": "wireless", "capacity": 3, "up": true },
+          { "a": 1,  "b": 7,  "type": "wireless", "capacity": 2, "up": true },
+          { "a": 2,  "b": 8,  "type": "wireless", "capacity": 3, "up": true },
+          { "a": 3,  "b": 6,  "type": "wireless", "capacity": 3, "up": true }
+        ],
+        "emergencyNodes": [5, 6]
+      },
+      "coach": [
+        { "trigger": "start",        "text": "A city festival is beginning. Thousands of people are streaming data at once. Your emergency services must stay online no matter what." },
+        { "trigger": "crisisStart",  "text": "The festival is live! Traffic is surging. Watch the links — they are overloading. Can you reroute emergency traffic?" },
+        { "trigger": "firstDrop",    "text": "Data is dropping! The link is full. Try setting the hospital and fire station routers to use a less busy path." },
+        { "trigger": "goalMet",      "text": "Emergency services stayed online! You managed congestion by prioritizing critical traffic. That is a queue with priority — the backbone of real networks." }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Emergency Prioritization",
+      "subtitle": "Hospital network overloaded",
+      "icon": "⊕",
+      "color": "#ff6b6b",
+      "concept": "Priority Queues",
+      "conceptReveal": "You triaged the network — emergency first, then critical, then normal. That is a priority queue, and it is how hospitals, 911 systems, and internet routing all work.",
+      "description": "Keep critical services at highest priority during overload.",
+      "goal": { "type": "priorityScore", "target": 0.75 },
+      "crisisEvent": { "type": "hospitalSurge", "tick": 30, "label": "🚑 Mass casualty event — hospital overwhelmed!", "loadMultiplier": 4 },
+      "locked": false
+    },
+    {
+      "id": 4,
+      "title": "Infrastructure Failure",
+      "subtitle": "Storm damages communication towers",
+      "icon": "⚡",
+      "color": "#c9b6ff",
+      "concept": "Redundancy & Failover",
+      "conceptReveal": "You kept the city running even when towers failed — by having backup paths. That is redundancy, the design principle that makes the internet survive disasters.",
+      "description": "Maintain city operation after tower failures.",
+      "goal": { "type": "resilience", "target": 0.70 },
+      "crisisEvent": { "type": "storm", "tick": 40, "label": "🌩️ Storm — towers failing!", "downLinks": [[1,5],[2,8]] },
+      "locked": false
+    },
+    {
+      "id": 5,
+      "title": "Cyber Defense",
+      "subtitle": "Fake messages spreading through city systems",
+      "icon": "⊛",
+      "color": "#ff6b6b",
+      "concept": "Cybersecurity & Filtering",
+      "conceptReveal": "You identified and blocked malicious traffic while letting real messages through. That is a firewall — the gatekeeper of every network.",
+      "description": "Detect and block malicious traffic before it reaches critical systems.",
+      "goal": { "type": "securityScore", "target": 0.80 },
+      "crisisEvent": { "type": "cyberAttack", "tick": 20, "label": "☠️ Cyber attack — spoofed packets detected!", "fakeRatio": 0.40 },
+      "locked": false
+    },
+    {
+      "id": 6,
+      "title": "City Optimization",
+      "subtitle": "Population doubles — demand explodes",
+      "icon": "⊙",
+      "color": "#7fd8ff",
+      "concept": "Algorithms & Optimization",
+      "conceptReveal": "You sorted repair priorities, found the most efficient routes, and balanced load. That is algorithmic thinking — search, sort, optimize — the core of all software.",
+      "description": "Maintain performance as population grows to 2 million.",
+      "goal": { "type": "performanceScore", "target": 0.75 },
+      "crisisEvent": { "type": "populationBurst", "tick": 50, "label": "📈 Population doubled overnight!", "loadMultiplier": 2.5 },
+      "locked": false
+    }
+  ],
+  "crisisTypes": {
+    "flood":           { "label": "🌊 Flood warning",            "affectedSystems": ["transport","energy"],       "duration": 120 },
+    "heatwave":        { "label": "🌡️ Extreme heatwave",         "affectedSystems": ["energy","healthcare"],      "duration": 180 },
+    "cyclone":         { "label": "🌀 Cyclone approaching",       "affectedSystems": ["all"],                      "duration": 90  },
+    "powerFailure":    { "label": "⚡ Power grid failure",         "affectedSystems": ["energy","network"],         "duration": 60  },
+    "towerFailure":    { "label": "📡 Tower offline",             "affectedSystems": ["network"],                  "duration": 80  },
+    "cyberAttack":     { "label": "☠️ Cyber attack",              "affectedSystems": ["network","security"],       "duration": 100 },
+    "festival":        { "label": "🎉 City festival surge",       "affectedSystems": ["network","transport"],      "duration": 150 },
+    "populationBurst": { "label": "📈 Population surge",          "affectedSystems": ["all"],                      "duration": 200 }
+  },
+  "buildingTypes": {
+    "datacenter":  { "emoji": "▣", "color": "#46f0c0", "label": "Data Center",   "critical": true  },
+    "tower":       { "emoji": "◈", "color": "#46f0c0", "label": "Signal Tower",  "critical": false },
+    "hospital":    { "emoji": "⊕", "color": "#ff6b6b", "label": "Hospital",      "critical": true  },
+    "school":      { "emoji": "⊞", "color": "#7fd8ff", "label": "School",        "critical": false },
+    "energy":      { "emoji": "☀", "color": "#ffb454", "label": "Solar Farm",    "critical": false },
+    "residential": { "emoji": "⌂", "color": "#8aa6b4", "label": "Residences",   "critical": false },
+    "emergency":   { "emoji": "⊛", "color": "#ff6b6b", "label": "Emergency Svc","critical": true  },
+    "router":      { "emoji": "○", "color": "#8aa6b4", "label": "Router",        "critical": false }
+  }
+}

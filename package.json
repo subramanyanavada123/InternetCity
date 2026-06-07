@@ -1,0 +1,17 @@
+{
+  "name": "internet-city",
+  "version": "1.0.0",
+  "description": "FutureOS — a browser-based STEM simulation game that teaches networking concepts through interactive city-building.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}

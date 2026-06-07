@@ -1,0 +1,516 @@
+{
+  "worlds": [
+    {
+      "id": 1,
+      "emoji": "✉️",
+      "title": "First Messages",
+      "description": "Send your first message!",
+      "concept": "routing",
+      "conceptReveal": "That's routing — choosing the path for a message!",
+      "levels": [
+        {
+          "id": "w1_l1",
+          "title": "Your First Delivery",
+          "prompt": "Get the message to the server.",
+          "mechanics": ["route"],
+          "liveTraffic": false,
+          "nodes": [
+            { "id": 0, "x": 140, "y": 300, "type": "home",   "emoji": "🏠", "label": "You" },
+            { "id": 1, "x": 400, "y": 160, "type": "router", "emoji": "📡", "label": "Router" },
+            { "id": 2, "x": 650, "y": 300, "type": "server", "emoji": "🖥️", "label": "Server" }
+          ],
+          "edges": [
+            { "a": 0, "b": 1, "baseTicks": 2, "traffic": "clear" },
+            { "a": 1, "b": 2, "baseTicks": 2, "traffic": "clear" }
+          ],
+          "packets": [{ "from": 0, "to": 2, "type": "email", "emoji": "✉️", "priority": 1 }],
+          "scoring": { "starsByOptimumDelta": [0, 0, 999] }
+        },
+        {
+          "id": "w1_l2",
+          "title": "Two Roads",
+          "prompt": "Two paths — which one is faster?",
+          "mechanics": ["route"],
+          "liveTraffic": false,
+          "nodes": [
+            { "id": 0, "x": 100, "y": 300, "type": "home",   "emoji": "🏠", "label": "You" },
+            { "id": 1, "x": 320, "y": 120, "type": "router", "emoji": "📡", "label": "Top" },
+            { "id": 2, "x": 320, "y": 480, "type": "router", "emoji": "📡", "label": "Bottom" },
+            { "id": 3, "x": 560, "y": 300, "type": "server", "emoji": "🖥️", "label": "Server" }
+          ],
+          "edges": [
+            { "a": 0, "b": 1, "baseTicks": 1, "traffic": "clear" },
+            { "a": 0, "b": 2, "baseTicks": 1, "traffic": "clear" },
+            { "a": 1, "b": 3, "baseTicks": 2, "traffic": "clear" },
+            { "a": 2, "b": 3, "baseTicks": 5, "traffic": "clear" }
+          ],
+          "packets": [{ "from": 0, "to": 3, "type": "email", "emoji": "✉️", "priority": 1 }],
+          "scoring": { "starsByOptimumDelta": [0, 2, 5] }
+        },
+        {
+          "id": "w1_l3",
+          "title": "The Junction",
+          "prompt": "Three routes — pick the fastest.",
+          "mechanics": ["route"],
+          "liveTraffic": false,
+          "nodes": [
+            { "id": 0, "x": 80,  "y": 300, "type": "home",   "emoji": "🏠", "label": "Home" },
+            { "id": 1, "x": 260, "y": 140, "type": "router", "emoji": "📡", "label": "R1" },
+            { "id": 2, "x": 260, "y": 300, "type": "router", "emoji": "📡", "label": "R2" },
+            { "id": 3, "x": 260, "y": 460, "type": "router", "emoji": "📡", "label": "R3" },
+            { "id": 4, "x": 480, "y": 300, "type": "server", "emoji": "🖥️", "label": "Server" }
+          ],
+          "edges": [
+            { "a": 0, "b": 1, "baseTicks": 2, "traffic": "clear" },
+            { "a": 0, "b": 2, "baseTicks": 2, "traffic": "clear" },
+            { "a": 0, "b": 3, "baseTicks": 2, "traffic": "clear" },
+            { "a": 1, "b": 4, "baseTicks": 1, "traffic": "clear" },
+            { "a": 2, "b": 4, "baseTicks": 3, "traffic": "clear" },
+            { "a": 3, "b": 4, "baseTicks": 5, "traffic": "clear" }
+          ],
+          "packets": [{ "from": 0, "to": 4, "type": "game", "emoji": "🎮", "priority": 1 }],
+          "scoring": { "starsByOptimumDelta": [0, 2, 6] }
+        },
+        {
+          "id": "w1_l4",
+          "title": "Longer Hops",
+          "prompt": "Fewer hops isn't always faster. Think in ticks!",
+          "mechanics": ["route"],
+          "liveTraffic": false,
+          "nodes": [
+            { "id": 0, "x": 80,  "y": 300, "type": "home",   "emoji": "🏠", "label": "Home" },
+            { "id": 1, "x": 280, "y": 300, "type": "router", "emoji": "📡", "label": "Direct" },
+            { "id": 2, "x": 220, "y": 140, "type": "router", "emoji": "📡", "label": "R2" },
+            { "id": 3, "x": 420, "y": 140, "type": "router", "emoji": "📡", "label": "R3" },
+            { "id": 4, "x": 560, "y": 300, "type": "server", "emoji": "🖥️", "label": "Server" }
+          ],
+          "edges": [
+            { "a": 0, "b": 1, "baseTicks": 1, "traffic": "clear" },
+            { "a": 1, "b": 4, "baseTicks": 8, "traffic": "clear" },
+            { "a": 0, "b": 2, "baseTicks": 2, "traffic": "clear" },
+            { "a": 2, "b": 3, "baseTicks": 2, "traffic": "clear" },
+            { "a": 3, "b": 4, "baseTicks": 2, "traffic": "clear" }
+          ],
+          "packets": [{ "from": 0, "to": 4, "type": "email", "emoji": "✉️", "priority": 1 }],
+          "scoring": { "starsByOptimumDelta": [0, 2, 5] }
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "emoji": "🚗",
+      "title": "Traffic Jams",
+      "description": "Busy roads take longer!",
+      "concept": "congestion",
+      "conceptReveal": "That's congestion — busy roads slow your data down!",
+      "levels": [
+        {
+          "id": "w2_l1",
+          "title": "The Busy Road",
+          "prompt": "Yellow roads are busy — they're slower!",
+          "mechanics": ["route", "congestion"],
+          "liveTraffic": false,
+          "nodes": [
+            { "id": 0, "x": 100, "y": 300, "type": "home",   "emoji": "🏠", "label": "Home" },
+            { "id": 1, "x": 300, "y": 130, "type": "router", "emoji": "📡", "label": "North" },
+            { "id": 2, "x": 300, "y": 470, "type": "router", "emoji": "📡", "label": "South" },
+            { "id": 3, "x": 560, "y": 300, "type": "server", "emoji": "🖥️", "label": "Server" }
+          ],
+          "edges": [
+            { "a": 0, "b": 1, "baseTicks": 2, "traffic": "clear" },
+            { "a": 0, "b": 2, "baseTicks": 2, "traffic": "clear" },
+            { "a": 1, "b": 3, "baseTicks": 2, "traffic": "busy" },
+            { "a": 2, "b": 3, "baseTicks": 2, "traffic": "clear" }
+          ],
+          "packets": [{ "from": 0, "to": 3, "type": "video", "emoji": "📹", "priority": 2 }],
+          "scoring": { "starsByOptimumDelta": [0, 3, 7] }
+        },
+        {
+          "id": "w2_l2",
+          "title": "Jam!",
+          "prompt": "Red roads are jammed! Find a clear way around.",
+          "mechanics": ["route", "congestion"],
+          "liveTraffic": false,
+          "nodes": [
+            { "id": 0, "x": 80,  "y": 300, "type": "home",   "emoji": "🏠", "label": "Home" },
+            { "id": 1, "x": 260, "y": 110, "type": "router", "emoji": "📡", "label": "N" },
+            { "id": 2, "x": 260, "y": 490, "type": "router", "emoji": "📡", "label": "S" },
+            { "id": 3, "x": 440, "y": 300, "type": "router", "emoji": "📡", "label": "Mid" },
+            { "id": 4, "x": 620, "y": 300, "type": "server", "emoji": "🖥️", "label": "Server" }
+          ],
+          "edges": [
+            { "a": 0, "b": 1, "baseTicks": 2, "traffic": "clear" },
+            { "a": 0, "b": 2, "baseTicks": 2, "traffic": "clear" },
+            { "a": 0, "b": 3, "baseTicks": 2, "traffic": "jam" },
+            { "a": 1, "b": 4, "baseTicks": 2, "traffic": "clear" },
+            { "a": 2, "b": 4, "baseTicks": 2, "traffic": "clear" },
+            { "a": 3, "b": 4, "baseTicks": 1, "traffic": "clear" }
+          ],
+          "packets": [{ "from": 0, "to": 4, "type": "email", "emoji": "✉️", "priority": 1 }],
+          "scoring": { "starsByOptimumDelta": [0, 3, 8] }
+        },
+        {
+          "id": "w2_l3",
+          "title": "Rush Hour",
+          "prompt": "Avoid the jams. Count the ticks before you send!",
+          "mechanics": ["route", "congestion"],
+          "liveTraffic": false,
+          "nodes": [
+            { "id": 0, "x": 60,  "y": 300, "type": "home",   "emoji": "🏠", "label": "Home" },
+            { "id": 1, "x": 210, "y": 140, "type": "router", "emoji": "📡", "label": "R1" },
+            { "id": 2, "x": 210, "y": 300, "type": "router", "emoji": "📡", "label": "R2" },
+            { "id": 3, "x": 210, "y": 460, "type": "router", "emoji": "📡", "label": "R3" },
+            { "id": 4, "x": 400, "y": 140, "type": "router", "emoji": "📡", "label": "R4" },
+            { "id": 5, "x": 400, "y": 460, "type": "router", "emoji": "📡", "label": "R5" },
+            { "id": 6, "x": 580, "y": 300, "type": "server", "emoji": "🖥️", "label": "Server" }
+          ],
+          "edges": [
+            { "a": 0, "b": 1, "baseTicks": 1, "traffic": "clear" },
+            { "a": 0, "b": 2, "baseTicks": 1, "traffic": "clear" },
+            { "a": 0, "b": 3, "baseTicks": 1, "traffic": "clear" },
+            { "a": 1, "b": 4, "baseTicks": 2, "traffic": "clear" },
+            { "a": 2, "b": 4, "baseTicks": 2, "traffic": "jam" },
+            { "a": 2, "b": 5, "baseTicks": 2, "traffic": "jam" },
+            { "a": 3, "b": 5, "baseTicks": 2, "traffic": "clear" },
+            { "a": 4, "b": 6, "baseTicks": 2, "traffic": "clear" },
+            { "a": 5, "b": 6, "baseTicks": 2, "traffic": "clear" }
+          ],
+          "packets": [{ "from": 0, "to": 6, "type": "game", "emoji": "🎮", "priority": 1 }],
+          "scoring": { "starsByOptimumDelta": [0, 4, 9] }
+        },
+        {
+          "id": "w2_l4",
+          "title": "Moving Traffic",
+          "prompt": "Traffic shifts while your message travels. Plan ahead!",
+          "mechanics": ["route", "congestion"],
+          "liveTraffic": true,
+          "nodes": [
+            { "id": 0, "x": 80,  "y": 300, "type": "home",   "emoji": "🏠", "label": "Home" },
+            { "id": 1, "x": 280, "y": 160, "type": "router", "emoji": "📡", "label": "R1" },
+            { "id": 2, "x": 280, "y": 440, "type": "router", "emoji": "📡", "label": "R2" },
+            { "id": 3, "x": 480, "y": 160, "type": "router", "emoji": "📡", "label": "R3" },
+            { "id": 4, "x": 480, "y": 440, "type": "router", "emoji": "📡", "label": "R4" },
+            { "id": 5, "x": 640, "y": 300, "type": "server", "emoji": "🖥️", "label": "Server" }
+          ],
+          "edges": [
+            { "a": 0, "b": 1, "baseTicks": 2, "traffic": "clear" },
+            { "a": 0, "b": 2, "baseTicks": 2, "traffic": "clear" },
+            { "a": 1, "b": 3, "baseTicks": 2, "traffic": "busy" },
+            { "a": 2, "b": 4, "baseTicks": 2, "traffic": "clear" },
+            { "a": 1, "b": 4, "baseTicks": 2, "traffic": "clear" },
+            { "a": 2, "b": 3, "baseTicks": 2, "traffic": "busy" },
+            { "a": 3, "b": 5, "baseTicks": 2, "traffic": "clear" },
+            { "a": 4, "b": 5, "baseTicks": 2, "traffic": "clear" }
+          ],
+          "packets": [{ "from": 0, "to": 5, "type": "video", "emoji": "📹", "priority": 2 }],
+          "scoring": { "starsByOptimumDelta": [0, 4, 10] }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "emoji": "📬",
+      "title": "The Waiting Line",
+      "description": "Packets wait their turn!",
+      "concept": "queue",
+      "conceptReveal": "That's a queue — first in, first out!",
+      "levels": [
+        {
+          "id": "w3_l1",
+          "title": "Line Up!",
+          "prompt": "Release packets in the order they arrived.",
+          "mechanics": ["queue"],
+          "queueSize": 3,
+          "timerTicks": 30,
+          "packets": [
+            { "id": "p1", "emoji": "✉️", "label": "Email",  "arrivalTick": 0, "priority": 1 },
+            { "id": "p2", "emoji": "📦", "label": "Data",   "arrivalTick": 2, "priority": 1 },
+            { "id": "p3", "emoji": "🎮", "label": "Game",   "arrivalTick": 4, "priority": 1 }
+          ],
+          "scoring": { "starsByErrors": [0, 1, 3] }
+        },
+        {
+          "id": "w3_l2",
+          "title": "Speed it up",
+          "prompt": "More packets are coming! Keep the line moving.",
+          "mechanics": ["queue"],
+          "queueSize": 4,
+          "timerTicks": 25,
+          "packets": [
+            { "id": "p1", "emoji": "✉️", "label": "Email",  "arrivalTick": 0, "priority": 1 },
+            { "id": "p2", "emoji": "📦", "label": "Data",   "arrivalTick": 1, "priority": 1 },
+            { "id": "p3", "emoji": "🎮", "label": "Game",   "arrivalTick": 2, "priority": 1 },
+            { "id": "p4", "emoji": "📹", "label": "Video",  "arrivalTick": 3, "priority": 1 }
+          ],
+          "scoring": { "starsByErrors": [0, 1, 2] }
+        },
+        {
+          "id": "w3_l3",
+          "title": "Don't Let it Back Up!",
+          "prompt": "Release fast or the line backs up into traffic!",
+          "mechanics": ["queue"],
+          "queueSize": 3,
+          "timerTicks": 20,
+          "packets": [
+            { "id": "p1", "emoji": "✉️", "label": "Email",  "arrivalTick": 0, "priority": 1 },
+            { "id": "p2", "emoji": "🎮", "label": "Game",   "arrivalTick": 1, "priority": 1 },
+            { "id": "p3", "emoji": "📦", "label": "Data",   "arrivalTick": 2, "priority": 1 },
+            { "id": "p4", "emoji": "📹", "label": "Video",  "arrivalTick": 3, "priority": 1 },
+            { "id": "p5", "emoji": "✉️", "label": "Email2", "arrivalTick": 4, "priority": 1 }
+          ],
+          "scoring": { "starsByErrors": [0, 1, 2] }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "emoji": "🚑",
+      "title": "Urgent Delivery",
+      "description": "Emergencies go first!",
+      "concept": "priority",
+      "conceptReveal": "That's a priority queue — important things go first!",
+      "levels": [
+        {
+          "id": "w4_l1",
+          "title": "Emergency First",
+          "prompt": "Drag the 🚑 to the front — emergencies go first!",
+          "mechanics": ["priority"],
+          "packets": [
+            { "id": "p1", "emoji": "✉️", "label": "Email",     "arrivalTick": 0, "priority": 1 },
+            { "id": "p2", "emoji": "🚑", "label": "Emergency", "arrivalTick": 1, "priority": 3 },
+            { "id": "p3", "emoji": "📦", "label": "Data",      "arrivalTick": 2, "priority": 1 }
+          ],
+          "scoring": { "starsByErrors": [0, 0, 2] }
+        },
+        {
+          "id": "w4_l2",
+          "title": "Sort the Queue",
+          "prompt": "🚑 before 📹 before ✉️. Drag them into order!",
+          "mechanics": ["priority"],
+          "packets": [
+            { "id": "p1", "emoji": "✉️", "label": "Email",     "arrivalTick": 0, "priority": 1 },
+            { "id": "p2", "emoji": "📹", "label": "Video",     "arrivalTick": 1, "priority": 2 },
+            { "id": "p3", "emoji": "🚑", "label": "Emergency", "arrivalTick": 2, "priority": 3 },
+            { "id": "p4", "emoji": "📦", "label": "Data",      "arrivalTick": 3, "priority": 1 }
+          ],
+          "scoring": { "starsByErrors": [0, 1, 2] }
+        },
+        {
+          "id": "w4_l3",
+          "title": "Rush Hour Priorities",
+          "prompt": "Lots of traffic — keep urgencies at the front!",
+          "mechanics": ["priority"],
+          "packets": [
+            { "id": "p1", "emoji": "✉️", "label": "Email",     "arrivalTick": 0, "priority": 1 },
+            { "id": "p2", "emoji": "📦", "label": "Data",      "arrivalTick": 0, "priority": 1 },
+            { "id": "p3", "emoji": "📹", "label": "Video",     "arrivalTick": 1, "priority": 2 },
+            { "id": "p4", "emoji": "🚑", "label": "Emergency", "arrivalTick": 2, "priority": 3 },
+            { "id": "p5", "emoji": "✉️", "label": "Email2",    "arrivalTick": 3, "priority": 1 },
+            { "id": "p6", "emoji": "🚑", "label": "SOS",       "arrivalTick": 4, "priority": 3 }
+          ],
+          "scoring": { "starsByErrors": [0, 1, 3] }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "emoji": "📦",
+      "title": "Packing & Unpacking",
+      "description": "Wrap it up, then unwrap in reverse!",
+      "concept": "stack",
+      "conceptReveal": "That's a stack — last in, first out, just like packing envelopes!",
+      "levels": [
+        {
+          "id": "w5_l1",
+          "title": "Wrap it Up",
+          "prompt": "Stack the envelopes on top of each other to pack the message.",
+          "mechanics": ["stack"],
+          "envelopes": [
+            { "id": "e1", "emoji": "📍", "label": "Address",  "order": 1 },
+            { "id": "e2", "emoji": "🛡️", "label": "Security", "order": 2 },
+            { "id": "e3", "emoji": "📮", "label": "Delivery", "order": 3 }
+          ],
+          "mode": "pack",
+          "scoring": { "starsByErrors": [0, 1, 3] }
+        },
+        {
+          "id": "w5_l2",
+          "title": "Unwrap in Order",
+          "prompt": "Unpack the message — remove the top envelope first!",
+          "mechanics": ["stack"],
+          "envelopes": [
+            { "id": "e3", "emoji": "📮", "label": "Delivery", "order": 3 },
+            { "id": "e2", "emoji": "🛡️", "label": "Security", "order": 2 },
+            { "id": "e1", "emoji": "📍", "label": "Address",  "order": 1 }
+          ],
+          "mode": "unpack",
+          "scoring": { "starsByErrors": [0, 1, 2] }
+        },
+        {
+          "id": "w5_l3",
+          "title": "Pack and Send!",
+          "prompt": "Pack it, then the receiver unpacks it — in reverse order!",
+          "mechanics": ["stack"],
+          "envelopes": [
+            { "id": "e1", "emoji": "📍", "label": "Address",  "order": 1 },
+            { "id": "e2", "emoji": "🛡️", "label": "Security", "order": 2 },
+            { "id": "e3", "emoji": "📮", "label": "Delivery", "order": 3 }
+          ],
+          "mode": "both",
+          "scoring": { "starsByErrors": [0, 0, 2] }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "emoji": "🧩",
+      "title": "Broken Into Pieces",
+      "description": "Scrambled packets — put them back in order!",
+      "concept": "sorting",
+      "conceptReveal": "That's sorting — putting packets back in the right order!",
+      "levels": [
+        {
+          "id": "w6_l1",
+          "title": "3 Pieces",
+          "prompt": "The message arrived scrambled! Drag the pieces into order.",
+          "mechanics": ["reassembly"],
+          "fragments": [
+            { "id": 1, "label": "Hello", "emoji": "1️⃣", "correctSlot": 0 },
+            { "id": 2, "label": "World", "emoji": "2️⃣", "correctSlot": 1 },
+            { "id": 3, "label": "!",     "emoji": "3️⃣", "correctSlot": 2 }
+          ],
+          "scrambledOrder": [2, 0, 1],
+          "scoring": { "starsByErrors": [0, 1, 3] }
+        },
+        {
+          "id": "w6_l2",
+          "title": "4 Pieces",
+          "prompt": "More pieces — the internet split the message up!",
+          "mechanics": ["reassembly"],
+          "fragments": [
+            { "id": 1, "label": "The",    "emoji": "1️⃣", "correctSlot": 0 },
+            { "id": 2, "label": "net",    "emoji": "2️⃣", "correctSlot": 1 },
+            { "id": 3, "label": "works!", "emoji": "3️⃣", "correctSlot": 2 },
+            { "id": 4, "label": "🎉",     "emoji": "4️⃣", "correctSlot": 3 }
+          ],
+          "scrambledOrder": [3, 1, 0, 2],
+          "scoring": { "starsByErrors": [0, 1, 3] }
+        },
+        {
+          "id": "w6_l3",
+          "title": "5 Pieces",
+          "prompt": "Every piece takes a different route — reassemble them all!",
+          "mechanics": ["reassembly"],
+          "fragments": [
+            { "id": 1, "label": "I",      "emoji": "1️⃣", "correctSlot": 0 },
+            { "id": 2, "label": "love",   "emoji": "2️⃣", "correctSlot": 1 },
+            { "id": 3, "label": "the",    "emoji": "3️⃣", "correctSlot": 2 },
+            { "id": 4, "label": "inter",  "emoji": "4️⃣", "correctSlot": 3 },
+            { "id": 5, "label": "net!",   "emoji": "5️⃣", "correctSlot": 4 }
+          ],
+          "scrambledOrder": [4, 2, 0, 3, 1],
+          "scoring": { "starsByErrors": [0, 1, 2] }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "emoji": "🛡️",
+      "title": "The Gatekeeper",
+      "description": "Block the fake packets!",
+      "concept": "firewall",
+      "conceptReveal": "That's a firewall — it checks who gets in!",
+      "levels": [
+        {
+          "id": "w7_l1",
+          "title": "Spot the Fake",
+          "prompt": "Tap the 🚫 fake packet to block it. Let real ones through!",
+          "mechanics": ["firewall"],
+          "streamSpeed": 2500,
+          "packets": [
+            { "id": "s1", "emoji": "✉️", "real": true,  "label": "Email" },
+            { "id": "s2", "emoji": "🚫", "real": false, "label": "FAKE" },
+            { "id": "s3", "emoji": "📦", "real": true,  "label": "Data" },
+            { "id": "s4", "emoji": "✉️", "real": true,  "label": "Email" },
+            { "id": "s5", "emoji": "🚫", "real": false, "label": "FAKE" }
+          ],
+          "scoring": { "starsByErrors": [0, 1, 2] }
+        },
+        {
+          "id": "w7_l2",
+          "title": "Faster Stream",
+          "prompt": "They come faster now — stay sharp!",
+          "mechanics": ["firewall"],
+          "streamSpeed": 1800,
+          "packets": [
+            { "id": "s1", "emoji": "✉️", "real": true,  "label": "Email" },
+            { "id": "s2", "emoji": "🚫", "real": false, "label": "FAKE" },
+            { "id": "s3", "emoji": "🎮", "real": true,  "label": "Game" },
+            { "id": "s4", "emoji": "🚫", "real": false, "label": "FAKE" },
+            { "id": "s5", "emoji": "📦", "real": true,  "label": "Data" },
+            { "id": "s6", "emoji": "✉️", "real": true,  "label": "Email" },
+            { "id": "s7", "emoji": "🚫", "real": false, "label": "FAKE" }
+          ],
+          "scoring": { "starsByErrors": [0, 1, 2] }
+        },
+        {
+          "id": "w7_l3",
+          "title": "The Rush",
+          "prompt": "Many packets — block all the fakes without stopping real ones!",
+          "mechanics": ["firewall"],
+          "streamSpeed": 1400,
+          "packets": [
+            { "id": "s1",  "emoji": "✉️", "real": true,  "label": "Email" },
+            { "id": "s2",  "emoji": "🚫", "real": false, "label": "FAKE" },
+            { "id": "s3",  "emoji": "📹", "real": true,  "label": "Video" },
+            { "id": "s4",  "emoji": "🚫", "real": false, "label": "FAKE" },
+            { "id": "s5",  "emoji": "📦", "real": true,  "label": "Data" },
+            { "id": "s6",  "emoji": "🚫", "real": false, "label": "FAKE" },
+            { "id": "s7",  "emoji": "🎮", "real": true,  "label": "Game" },
+            { "id": "s8",  "emoji": "✉️", "real": true,  "label": "Email" },
+            { "id": "s9",  "emoji": "🚫", "real": false, "label": "FAKE" },
+            { "id": "s10", "emoji": "📦", "real": true,  "label": "Data" }
+          ],
+          "scoring": { "starsByErrors": [0, 1, 2] }
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "emoji": "🏙️",
+      "title": "Keep the City Running",
+      "description": "Manage the whole network — how long can you last?",
+      "concept": "systems",
+      "conceptReveal": "You're a network engineer — every decision affects the whole city!",
+      "levels": [
+        {
+          "id": "w8_sandbox",
+          "title": "Sandbox",
+          "prompt": "Keep the city running! Handle jams, queues, and fakes.",
+          "mechanics": ["sandbox"],
+          "nodes": [
+            { "id": 0, "x": 80,  "y": 300, "type": "home",     "emoji": "🏠", "label": "Home" },
+            { "id": 1, "x": 240, "y": 160, "type": "router",   "emoji": "📡", "label": "R1" },
+            { "id": 2, "x": 240, "y": 440, "type": "router",   "emoji": "📡", "label": "R2" },
+            { "id": 3, "x": 400, "y": 300, "type": "router",   "emoji": "📡", "label": "R3" },
+            { "id": 4, "x": 540, "y": 160, "type": "firewall", "emoji": "🛡️", "label": "Firewall" },
+            { "id": 5, "x": 540, "y": 440, "type": "router",   "emoji": "📡", "label": "R5" },
+            { "id": 6, "x": 680, "y": 300, "type": "server",   "emoji": "🖥️", "label": "Server" }
+          ],
+          "edges": [
+            { "a": 0, "b": 1, "baseTicks": 2, "traffic": "clear" },
+            { "a": 0, "b": 2, "baseTicks": 2, "traffic": "clear" },
+            { "a": 1, "b": 3, "baseTicks": 2, "traffic": "clear" },
+            { "a": 2, "b": 3, "baseTicks": 2, "traffic": "clear" },
+            { "a": 1, "b": 4, "baseTicks": 2, "traffic": "clear" },
+            { "a": 3, "b": 4, "baseTicks": 2, "traffic": "clear" },
+            { "a": 3, "b": 5, "baseTicks": 2, "traffic": "clear" },
+            { "a": 4, "b": 6, "baseTicks": 2, "traffic": "clear" },
+            { "a": 5, "b": 6, "baseTicks": 2, "traffic": "clear" }
+          ],
+          "scoring": { "type": "survival" }
+        }
+      ]
+    }
+  ]
+}
