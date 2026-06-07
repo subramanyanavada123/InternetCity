@@ -35,39 +35,50 @@ function loadProgress() {
 function saveProgress(p) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); }
 
 // ── Shared DOM builder ────────────────────────────────────────────────────
+const IS_MOBILE = () => window.innerWidth <= 640;
+
 function makeGameScreen(app) {
   app.innerHTML = '';
   const screen = document.createElement('div');
-  screen.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:row;background:#04101a;';
+  screen.className = 'game-screen';
 
   const canvasWrap = document.createElement('div');
-  canvasWrap.style.cssText = 'flex:1;position:relative;overflow:hidden;min-width:0;min-height:0;';
+  canvasWrap.className = 'game-canvas-wrap';
 
   const canvas = document.createElement('canvas');
-  canvas.style.cssText = 'position:absolute;inset:0;display:block;width:100%;height:100%;cursor:crosshair;';
+  canvas.className = 'game-canvas';
   canvasWrap.appendChild(canvas);
 
   const sidePanel = document.createElement('div');
   sidePanel.className = 'side-panel';
 
-  screen.appendChild(canvasWrap);
-  screen.appendChild(sidePanel);
-  app.appendChild(screen);
+  // Mobile: side panel becomes a bottom drawer
+  if (IS_MOBILE()) {
+    sidePanel.classList.add('side-panel-drawer');
+    // Drawer handle tab
+    const handle = document.createElement('div');
+    handle.className = 'drawer-handle';
+    handle.innerHTML = '<div class="drawer-pip"></div><span class="drawer-tab-label">Info ▾</span>';
+    handle.addEventListener('click', () => {
+      const open = sidePanel.classList.toggle('drawer-open');
+      handle.querySelector('.drawer-tab-label').textContent = open ? 'Info ▴' : 'Info ▾';
+    });
+    sidePanel.insertBefore(handle, sidePanel.firstChild);
+    screen.appendChild(canvasWrap);
+    screen.appendChild(sidePanel);
+  } else {
+    screen.appendChild(canvasWrap);
+    screen.appendChild(sidePanel);
+  }
 
+  app.appendChild(screen);
   screen.getBoundingClientRect();
   return { screen, canvas, canvasWrap, sidePanel };
 }
 
 function makeInstructionBox(parent) {
   const box = document.createElement('div');
-  box.style.cssText = `
-    position:absolute;top:16px;left:50%;transform:translateX(-50%);
-    background:rgba(7,26,36,0.95);border:1px solid rgba(70,240,192,0.35);
-    border-radius:12px;padding:14px 20px;max-width:420px;width:90%;
-    font-size:14px;line-height:1.6;color:#a8d8c8;z-index:50;
-    text-align:center;backdrop-filter:blur(8px);
-    box-shadow:0 4px 24px rgba(0,0,0,0.5);
-  `;
+  box.className = 'instr-box';
   parent.appendChild(box);
   return {
     el: box,
@@ -80,19 +91,14 @@ function makeInstructionBox(parent) {
 
 function makeStepTracker(parent, steps) {
   const el = document.createElement('div');
-  el.style.cssText = `
-    position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
-    display:flex;gap:8px;align-items:center;z-index:50;
-    background:rgba(7,26,36,0.85);border:1px solid rgba(70,240,192,0.18);
-    border-radius:20px;padding:8px 16px;
-  `;
+  el.className = 'step-tracker';
   parent.appendChild(el);
   return {
     el,
     update(current, total, label) {
       el.innerHTML = `
-        <span style="color:#46f0c0;font-size:12px;font-weight:700;">Step ${current}/${total}</span>
-        <span style="color:#8aa6b4;font-size:12px;margin-left:6px;">${label}</span>
+        <span class="step-num">Step ${current}/${total}</span>
+        <span class="step-label">${label}</span>
       `;
     },
   };
@@ -100,12 +106,8 @@ function makeStepTracker(parent, steps) {
 
 function makeGoalBar(parent, { label = 'Goal', color = '#46f0c0', target = 100 } = {}) {
   const el = document.createElement('div');
-  el.style.cssText = `
-    position:absolute;bottom:52px;left:50%;transform:translateX(-50%);
-    width:min(340px,85%);z-index:50;
-    background:rgba(7,26,36,0.9);border:1px solid ${color}33;
-    border-radius:10px;padding:8px 14px;backdrop-filter:blur(6px);
-  `;
+  el.className = 'goal-bar-widget';
+  el.style.setProperty('--goal-color', color);
   parent.appendChild(el);
   return {
     el,
@@ -127,6 +129,31 @@ function makeGoalBar(parent, { label = 'Goal', color = '#46f0c0', target = 100 }
         ${reached ? `<div style="font-size:10px;color:${color};margin-top:4px;text-align:right;">✔ Goal reached!</div>` : ''}
       `;
     },
+  };
+}
+
+// Floating gameplay panel — sits on canvas bottom-right, always visible
+function makeFloatingPanel(parent, { title, color = '#46f0c0', icon = '◈' } = {}) {
+  const el = document.createElement('div');
+  el.className = 'floating-panel';
+  el.style.cssText = `
+    position:absolute;right:12px;bottom:90px;
+    width:min(260px,42vw);max-height:55vh;overflow-y:auto;
+    background:rgba(4,12,20,0.96);border:1px solid ${color}44;
+    border-radius:14px;padding:12px 14px;z-index:55;
+    backdrop-filter:blur(12px);
+    box-shadow:0 4px 32px rgba(0,0,0,0.6),0 0 0 1px ${color}22;
+  `;
+  el.innerHTML = `
+    <div style="font-size:10px;color:${color};letter-spacing:2px;text-transform:uppercase;
+      margin-bottom:10px;font-weight:700;">${icon} ${title}</div>
+    <div class="fp-body"></div>
+  `;
+  parent.appendChild(el);
+  return {
+    el,
+    body: el.querySelector('.fp-body'),
+    setTitle(t) { el.querySelector('div').textContent = `${icon} ${t}`; },
   };
 }
 
@@ -163,10 +190,12 @@ function showConceptReveal(parent, text, onContinue) {
 function makeBackBtn(parent, onClick) {
   const b = document.createElement('button');
   b.textContent = '◀ Missions';
+  b.className = 'btn-back-missions';
   b.style.cssText = `
-    position:absolute;top:16px;left:16px;z-index:60;
-    background:rgba(7,26,36,0.85);border:1px solid rgba(70,240,192,0.2);
+    position:absolute;top:8px;left:8px;z-index:60;
+    background:rgba(7,26,36,0.9);border:1px solid rgba(70,240,192,0.2);
     color:#8aa6b4;border-radius:8px;padding:8px 12px;font-size:12px;cursor:pointer;
+    min-height:36px;
   `;
   b.addEventListener('click', onClick);
   parent.appendChild(b);
@@ -432,104 +461,90 @@ class Game {
     const instr    = makeInstructionBox(canvasWrap);
     const steps    = makeStepTracker(canvasWrap, 3);
     const goalBar  = makeGoalBar(canvasWrap, { label: '🏥 Emergency Uptime', color: '#ffb454', target: 75 });
+    const routerPanel = makeFloatingPanel(canvasWrap, { title: 'Tap a Router ○', color: '#ffb454', icon: '⟳' });
 
     let step = 1, crisisFired = false, goalMet = false, tick = 0, selectedRouter = null;
     let reroutes = 0, bottleneckIdentified = false;
 
     const STEPS = [
-      { action: '👀 Watch the dots — that\'s data moving through the network.', why: 'Green = fine. Red/orange = congested. Festival starts soon!' },
-      { action: '🎉 FESTIVAL! Traffic surged. 👆 TAP a Router ○ on the canvas.', why: 'When a link is full, packets queue up then DROP. Emergency services must stay online!' },
-      { action: '✔ Panel on right: pick a less-busy path for the selected router.', why: '📡 Data waits in a QUEUE. If the queue overflows → data is lost. Route emergencies to free links.' },
+      { action: '👀 Watch the moving dots — data flowing through the city.', why: 'Green links = fine. Orange/red = congested. Festival starts soon!' },
+      { action: '🎉 FESTIVAL! Traffic surged. 👆 Tap a Router ○ on the canvas.', why: 'Packets are queueing and dropping. Emergency services must stay online!' },
+      { action: '👆 Choose a less-busy path in the panel below-right.', why: 'Routing to a free link keeps hospital and fire station traffic flowing.' },
     ];
 
     const setStep = (n, label) => {
       step = n;
       const s = STEPS[n - 1];
       instr.el.innerHTML = `
-        <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:6px;">${s.action}</div>
-        <div style="font-size:12px;color:#8aa6b4;line-height:1.5;">${s.why}</div>
+        <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;">${s.action}</div>
+        <div style="font-size:11px;color:#8aa6b4;line-height:1.5;">${s.why}</div>
       `;
       speech.coach(s.action);
       steps.update(n, 3, label);
     };
     setStep(1, 'Watch the network');
 
-    const ctrlBox = document.createElement('div');
-    ctrlBox.style.cssText = 'margin-top:12px;';
-    sidePanel.appendChild(ctrlBox);
-
     const showRouterControls = (nodeId) => {
       const node = net.getNode(nodeId);
       if (!node) return;
       const neighbors = net.neighbors(nodeId).map(({ neighbor }) => net.getNode(neighbor)).filter(Boolean);
 
-      ctrlBox.innerHTML = `
-        <div style="font-size:11px;color:#46f0c0;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
-          Route from: ${node.label}
+      routerPanel.body.innerHTML = `
+        <div style="font-size:12px;color:#e0f4ec;margin-bottom:8px;">
+          Routing from: <strong style="color:#ffb454">${node.label}</strong>
         </div>
-        <div style="font-size:11px;color:#8aa6b4;margin-bottom:8px;">Send data toward:</div>
+        <div style="font-size:10px;color:#8aa6b4;margin-bottom:8px;">Send packets toward:</div>
       `;
       neighbors.forEach(nb => {
         const edge = net.getEdge(nodeId, nb.id);
         const load = edge ? (edge.load || 0) : 0;
         const loadColor = load > 0.8 ? '#ff6b6b' : load > 0.5 ? '#ffb454' : '#46f0c0';
+        const loadLabel = load > 0.8 ? '🔴 Congested' : load > 0.5 ? '🟡 Busy' : '🟢 Free';
         const isActive  = node.rule === nb.id;
         const bBtn = document.createElement('button');
         bBtn.style.cssText = `
           display:flex;align-items:center;gap:8px;width:100%;
           padding:10px 12px;margin-bottom:6px;border-radius:8px;cursor:pointer;
-          background:${isActive ? 'rgba(70,240,192,0.15)' : 'rgba(70,240,192,0.04)'};
-          border:1px solid ${isActive ? '#46f0c0' : 'rgba(70,240,192,0.15)'};
-          color:#e0f4ec;font-size:13px;text-align:left;
+          background:${isActive ? 'rgba(255,180,84,0.15)' : 'rgba(255,255,255,0.04)'};
+          border:1px solid ${isActive ? '#ffb454' : 'rgba(255,255,255,0.1)'};
+          color:#e0f4ec;font-size:13px;text-align:left;transition:all .15s;
         `;
         bBtn.innerHTML = `
-          <span>${nb.emoji || '○'}</span>
-          <span style="flex:1">${nb.label}</span>
-          <span style="font-size:10px;color:${loadColor}">${Math.round(load * 100)}% load</span>
-          ${isActive ? '<span style="color:#46f0c0">✔</span>' : ''}
+          <span style="flex:1;font-weight:${isActive?'700':'400'}">${nb.label}</span>
+          <span style="font-size:11px;color:${loadColor}">${loadLabel}</span>
+          ${isActive ? '<span style="color:#ffb454;font-size:16px;">✔</span>' : ''}
         `;
         bBtn.addEventListener('click', () => {
           net.setRule(nodeId, nb.id);
           reroutes++;
           assessment.record('reroute_applied', { moduleId: 2, from: nodeId, to: nb.id });
-
-          // Emergency prioritisation evidence
-          const isEmergencyRouter = mod.city.emergencyNodes?.some(eid => {
-            return net.neighbors(nodeId).some(n => n.neighbor === eid);
-          });
-          if (isEmergencyRouter && load < 0.5) {
-            assessment.record('emergency_prioritised', { moduleId: 2 });
-            ceLog.push(
-              'Rerouted emergency traffic to a less-busy path',
-              'Hospital and fire station packets now have more bandwidth',
-              'Prioritisation: protecting critical traffic from congestion'
-            );
-            conseq.explain('reroute_applied');
-          } else {
-            ceLog.push(
-              `Changed routing rule at ${node.label}`,
-              'Packets now take a different path through the network',
-              'Dynamic routing: adjusting paths in response to conditions'
-            );
-            conseq.explain('reroute_applied');
-          }
-
+          ceLog.push(
+            `Rerouted ${node.label} → ${nb.label}`,
+            'Packets now take a different path through the network',
+            'Dynamic routing: adjusting paths in response to congestion'
+          );
+          conseq.explain('reroute_applied');
           showRouterControls(nodeId);
-          setStep(3, 'Rule set — watch packets reroute');
+          setStep(3, 'Watching for improvement…');
         });
-        ctrlBox.appendChild(bBtn);
+        routerPanel.body.appendChild(bBtn);
       });
 
       const clearBtn = document.createElement('button');
-      clearBtn.textContent = '✕ Clear rule';
+      clearBtn.textContent = '✕ Clear routing rule';
       clearBtn.style.cssText = `
         width:100%;padding:8px;border-radius:8px;cursor:pointer;
-        background:transparent;border:1px solid rgba(255,107,107,0.3);
-        color:#8aa6b4;font-size:12px;margin-top:4px;
+        background:transparent;border:1px solid rgba(255,107,107,0.25);
+        color:#8aa6b4;font-size:11px;margin-top:4px;
       `;
       clearBtn.addEventListener('click', () => { net.setRule(nodeId, null); showRouterControls(nodeId); });
-      ctrlBox.appendChild(clearBtn);
+      routerPanel.body.appendChild(clearBtn);
     };
+
+    // Show idle hint in panel before router is selected
+    routerPanel.body.innerHTML = `<div style="color:#8aa6b4;font-size:12px;text-align:center;padding:8px 0;">
+      Tap a <strong style="color:#ffb454">Router ○</strong> node on the canvas to control traffic flow.
+    </div>`;
 
     canvas.addEventListener('click', e => {
       const node = renderer.hitTestNode(net, e.clientX, e.clientY);
@@ -670,15 +685,15 @@ class Game {
     const instr    = makeInstructionBox(canvasWrap);
     const steps    = makeStepTracker(canvasWrap, 3);
     const goalBar  = makeGoalBar(canvasWrap, { label: '🚨 Triage Score', color: '#ff6b6b', target: 60 });
+    const triagePanel = makeFloatingPanel(canvasWrap, { title: 'Incoming Queue', color: '#ff6b6b', icon: '🚨' });
 
     makeBackBtn(canvasWrap, () => { this._destroySim(); this.showModuleSelect(); });
 
-    // Priority queue state — track which node source is "active" for canvas highlight
-    const PRIORITY_TYPES = ['emergency', 'critical', 'normal'];
+    // Priority queue state
     const queue = [];
     let triageScore = 0, triageTotal = 0;
     let crisisFired = false, goalMet = false, tick = 0;
-    let highlightedNode = null; // canvas highlight for currently-processed item
+    let highlightedNode = null;
 
     // Packet colors for canvas: emergency=red, critical=orange, normal=green
     const pktColorMap = new Map();
@@ -691,65 +706,57 @@ class Game {
       else typeSourceMap.normal.push(n.id);
     });
 
-    // Triage panel in side panel
-    const triageBox = document.createElement('div');
-    triageBox.style.cssText = 'margin-top:12px;';
-    sidePanel.appendChild(triageBox);
-
     const renderTriagePanel = () => {
       const score = triageTotal ? Math.round((triageScore / triageTotal) * 100) : 0;
       goalBar.update(score);
-      triageBox.innerHTML = `
-        <div style="font-size:11px;color:#ff6b6b;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">
-          🚨 Incoming Queue
-        </div>
-        <div style="font-size:10px;color:#8aa6b4;margin-bottom:8px;">Press ↑ to move emergencies to the front.</div>
-        <div id="triage-queue" style="display:flex;flex-direction:column;gap:4px;min-height:40px;"></div>
-        <div style="margin-top:10px;font-size:10px;color:#8aa6b4;">
-          Triage score: <span style="color:#ff6b6b;font-weight:700;">${score}%</span>
+      const colors = { emergency: '#ff6b6b', critical: '#ffb454', normal: '#46f0c0' };
+      const icons  = { emergency: '🚨', critical: '⚠️', normal: '📦' };
+      triagePanel.body.innerHTML = `
+        <div style="font-size:10px;color:#8aa6b4;margin-bottom:6px;">
+          Press <strong style="color:#ff6b6b">↑</strong> to move emergencies to the front.
+          Score: <strong style="color:#ff6b6b">${score}%</strong>
         </div>
       `;
-      const queueEl = triageBox.querySelector('#triage-queue');
       if (!queue.length) {
-        queueEl.innerHTML = '<div style="color:#8aa6b4;font-size:12px;text-align:center;padding:8px;">Queue empty</div>';
+        triagePanel.body.innerHTML += '<div style="color:#8aa6b4;font-size:11px;text-align:center;padding:6px;">Queue empty — waiting for patients…</div>';
         return;
       }
       queue.forEach((item, idx) => {
         const row = document.createElement('div');
-        const colors = { emergency: '#ff6b6b', critical: '#ffb454', normal: '#46f0c0' };
         row.style.cssText = `
-          padding:8px 10px;border-radius:6px;cursor:pointer;
-          background:rgba(70,240,192,0.05);
-          border:1px solid ${colors[item.type] || '#46f0c0'};
+          padding:8px 10px;border-radius:8px;
+          background:${colors[item.type]}18;
+          border:1px solid ${colors[item.type]}66;
           color:#e0f4ec;font-size:12px;
           display:flex;align-items:center;gap:8px;
+          margin-bottom:5px;
         `;
-        const priorityIcons = { emergency: '🚨', critical: '⚠️', normal: '📦' };
         row.innerHTML = `
-          <span>${priorityIcons[item.type] || '○'}</span>
-          <span style="flex:1">${item.label}</span>
-          <span style="color:${colors[item.type]};font-size:10px;text-transform:uppercase;">${item.type}</span>
-          ${idx > 0 ? '<button class="triage-up" style="background:none;border:none;color:#46f0c0;cursor:pointer;font-size:14px;">↑</button>' : '<span style="width:22px;"></span>'}
+          <span style="font-size:16px;">${icons[item.type] || '○'}</span>
+          <span style="flex:1;font-size:11px;">${item.label}</span>
+          <span style="color:${colors[item.type]};font-size:9px;text-transform:uppercase;font-weight:700;">${item.type}</span>
+          ${idx > 0
+            ? `<button style="background:${colors[item.type]}33;border:1px solid ${colors[item.type]};color:${colors[item.type]};border-radius:6px;padding:4px 8px;cursor:pointer;font-size:14px;font-weight:700;min-width:32px;">↑</button>`
+            : `<span style="width:32px;text-align:center;font-size:11px;color:#46f0c0;">TOP</span>`
+          }
         `;
-        const upBtn = row.querySelector('.triage-up');
+        const upBtn = row.querySelector('button');
         if (upBtn) {
           upBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const item = queue.splice(idx, 1)[0];
-            queue.splice(idx - 1, 0, item);
-            // Highlight source node on canvas for this packet type
-            const srcIds = typeSourceMap[item.type] || [];
+            const moved = queue.splice(idx, 1)[0];
+            queue.splice(idx - 1, 0, moved);
+            const srcIds = typeSourceMap[moved.type] || [];
             if (srcIds.length) {
               highlightedNode = srcIds[Math.floor(Math.random() * srcIds.length)];
               setTimeout(() => { highlightedNode = null; }, 1200);
             }
-            // Score the triage decision
-            if (item.type === 'emergency' && idx - 1 === 0) {
+            if (moved.type === 'emergency' && idx - 1 === 0) {
               triageScore++;
               assessment.record('triage_correct', { moduleId: 3 });
               ceLog.push('Moved emergency packet to front', 'It will be processed first', 'Priority queue: importance overrides arrival order');
               conseq.explain('high_priority_delivered');
-            } else if (item.type === 'normal' && idx - 1 === 0) {
+            } else if (moved.type === 'normal' && idx - 1 === 0) {
               assessment.record('triage_incorrect', { moduleId: 3 });
               conseq.explain('low_priority_starved');
             }
@@ -757,21 +764,21 @@ class Game {
             renderTriagePanel();
           });
         }
-        queueEl.appendChild(row);
+        triagePanel.body.appendChild(row);
       });
     };
 
     const STEPS = [
-      { action: '👀 Watch the incoming packets queue up during the hospital surge.', why: 'Each packet has a priority: emergency, critical, or normal.' },
-      { action: '🚑 HOSPITAL SURGE! Reorder the queue — emergencies first.', why: 'In a priority queue, importance beats arrival order. Who should wait?' },
-      { action: '✔ Keep triaging. Which packets can wait? Which can\'t?', why: 'Real hospitals, 911 systems, and network routers all use priority queues.' },
+      { action: '👀 Watch the hospital network — packets are flowing.', why: 'Red = emergency. Orange = critical. Green = normal. Crisis coming soon!' },
+      { action: '🚑 SURGE! Move 🚨 emergencies to the TOP of the queue →', why: 'Tap ↑ next to emergency items. The front of the queue gets processed first.' },
+      { action: '✔ Keep triaging — emergencies first, normal last.', why: 'Real hospitals, 911 centres and routers all use priority queues like this.' },
     ];
 
     const setStep = (n, label) => {
       const s = STEPS[n - 1];
       instr.el.innerHTML = `
-        <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:6px;">${s.action}</div>
-        <div style="font-size:12px;color:#8aa6b4;line-height:1.5;">${s.why}</div>
+        <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;">${s.action}</div>
+        <div style="font-size:11px;color:#8aa6b4;line-height:1.5;">${s.why}</div>
       `;
       steps.update(n, 3, label);
     };
@@ -933,10 +940,8 @@ class Game {
       return nodes.filter(n => !reachable.has(n.id));
     };
 
-    // Backup link panel
-    const backupBox = document.createElement('div');
-    backupBox.style.cssText = 'margin-top:12px;';
-    sidePanel.appendChild(backupBox);
+    // Backup link panel — floating overlay on canvas
+    const backupPanel = makeFloatingPanel(canvasWrap, { title: 'Network Status', color: '#c9b6ff', icon: '⚡' });
 
     const renderBackupPanel = () => {
       const offline = getOfflineNodes();
@@ -944,18 +949,21 @@ class Game {
       offlineNodeSet = new Set(offline.map(n => n.id));
       const onlinePct = Math.round(((allNodes.length - offline.length) / Math.max(allNodes.length, 1)) * 100);
       goalBar.update(onlinePct);
-      backupBox.innerHTML = `
-        <div style="font-size:11px;color:#c9b6ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
-          ⚡ Network Status
-        </div>
-        <div style="font-size:12px;color:#8aa6b4;margin-bottom:6px;">
-          Online: <span style="color:#46f0c0">${allNodes.length - offline.length}/${allNodes.length}</span>
+      backupPanel.body.innerHTML = `
+        <div style="font-size:12px;margin-bottom:6px;">
+          Online: <span style="color:#46f0c0;font-weight:700;">${allNodes.length - offline.length}/${allNodes.length}</span>
+          &nbsp;|&nbsp; Backups: <span style="color:#c9b6ff;font-weight:700;">${backupLinksAdded}</span>
         </div>
         ${offline.length > 0 ? `
-          <div style="font-size:11px;color:#ff6b6b;margin-bottom:8px;">✕ Offline: ${offline.map(n => n.label).join(', ')}</div>
-          <div style="font-size:10px;color:#c9b6ff;margin-bottom:4px;">👆 Tap two nodes on the canvas to draw a backup link.</div>
-        ` : '<div style="font-size:11px;color:#46f0c0;margin-bottom:8px;">All buildings online ✔</div>'}
-        <div style="font-size:10px;color:#c9b6ff;margin-top:4px;">Backup links added: <strong>${backupLinksAdded}</strong></div>
+          <div style="font-size:11px;color:#ff6b6b;margin-bottom:6px;line-height:1.5;">
+            ✕ Offline:<br><strong>${offline.map(n => n.label).join(', ')}</strong>
+          </div>
+          <div style="font-size:11px;color:#c9b6ff;background:rgba(201,182,255,0.1);border:1px solid rgba(201,182,255,0.3);border-radius:8px;padding:8px;line-height:1.5;">
+            👆 Tap <strong>any two nodes</strong> on the canvas to draw a backup link between them.
+          </div>
+        ` : `
+          <div style="font-size:12px;color:#46f0c0;text-align:center;padding:8px;">All buildings online ✔</div>
+        `}
       `;
     };
 
@@ -1143,37 +1151,39 @@ class Game {
       renderStream();
     };
 
-    const streamBox = document.createElement('div');
-    streamBox.style.cssText = 'margin-top:12px;';
-    sidePanel.appendChild(streamBox);
+    // Firewall panel — floating overlay on canvas
+    const streamPanel = makeFloatingPanel(canvasWrap, { title: 'Packet Firewall', color: '#ff6b6b', icon: '⊛' });
 
     const renderStream = () => {
       const pending = stream.filter(p => !p.decided);
-      const blockedCount  = stream.filter(p => p.decided && p.decision === 'block').length;
-      const allowedCount  = stream.filter(p => p.decided && p.decision === 'allow').length;
-      streamBox.innerHTML = `
-        <div style="font-size:11px;color:#ff6b6b;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
-          ⊛ Packet Firewall
-        </div>
+      const blockedCount = stream.filter(p => p.decided && p.decision === 'block').length;
+      const allowedCount = stream.filter(p => p.decided && p.decision === 'allow').length;
+      streamPanel.body.innerHTML = `
         <div style="font-size:10px;color:#8aa6b4;margin-bottom:8px;">
-          ✔ Allowed: ${allowedCount} &nbsp; ✕ Blocked: ${blockedCount} &nbsp; ⚠ False+: ${falsePositives}
+          ✔ <span style="color:#46f0c0">${allowedCount}</span> allowed &nbsp;
+          ✕ <span style="color:#ff6b6b">${blockedCount}</span> blocked &nbsp;
+          ⚠ <span style="color:#ffb454">${falsePositives}</span> false+
         </div>
-        <div style="font-size:10px;color:#8aa6b4;margin-bottom:6px;">Tap BLOCK or ALLOW for each packet:</div>
-        <div id="stream-list" style="display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;"></div>
       `;
-      const listEl = streamBox.querySelector('#stream-list');
-      pending.slice(0, 5).forEach(pkt => {
+      if (!pending.length) {
+        streamPanel.body.innerHTML += `<div style="color:#46f0c0;font-size:11px;text-align:center;padding:8px;">Batch complete — next batch incoming…</div>`;
+        return;
+      }
+      pending.slice(0, 4).forEach(pkt => {
         const row = document.createElement('div');
         row.style.cssText = `
-          padding:8px;border-radius:6px;background:rgba(70,240,192,0.04);
-          border:1px solid rgba(70,240,192,0.15);font-size:11px;color:#e0f4ec;
+          padding:8px 10px;border-radius:8px;
+          background:rgba(255,107,107,0.06);
+          border:1px solid rgba(255,107,107,0.2);
+          font-size:11px;color:#e0f4ec;
+          margin-bottom:6px;
         `;
         row.innerHTML = `
-          <div style="font-weight:700;margin-bottom:4px;">${pkt.label}</div>
-          <div style="color:#8aa6b4;font-size:10px;margin-bottom:6px;">From: ${pkt.source}</div>
+          <div style="font-weight:700;margin-bottom:2px;font-size:12px;">${pkt.label}</div>
+          <div style="color:#8aa6b4;font-size:10px;margin-bottom:6px;">From: <code style="color:#ffb454;">${pkt.source}</code></div>
           <div style="display:flex;gap:6px;">
-            <button class="pkt-allow" style="flex:1;padding:4px;border-radius:4px;background:rgba(70,240,192,0.1);border:1px solid #46f0c0;color:#46f0c0;cursor:pointer;font-size:11px;">✔ Allow</button>
-            <button class="pkt-block" style="flex:1;padding:4px;border-radius:4px;background:rgba(255,107,107,0.1);border:1px solid #ff6b6b;color:#ff6b6b;cursor:pointer;font-size:11px;">✕ Block</button>
+            <button class="pkt-allow" style="flex:1;padding:6px 4px;border-radius:6px;background:rgba(70,240,192,0.12);border:1px solid #46f0c0;color:#46f0c0;cursor:pointer;font-size:11px;font-weight:700;">✔ Allow</button>
+            <button class="pkt-block" style="flex:1;padding:6px 4px;border-radius:6px;background:rgba(255,107,107,0.12);border:1px solid #ff6b6b;color:#ff6b6b;cursor:pointer;font-size:11px;font-weight:700;">✕ Block</button>
           </div>
         `;
         row.querySelector('.pkt-allow').addEventListener('click', () => {
@@ -1184,7 +1194,7 @@ class Game {
             ceLog.push('Allowed a malicious packet', 'It reached critical systems and caused disruption', 'False negative: the cost of under-filtering');
             conseq.explain('attack_reached_target');
           } else {
-            assessment.record('malicious_blocked', { moduleId: 5 }); // inverted intentionally
+            assessment.record('malicious_blocked', { moduleId: 5 });
           }
           renderStream();
         });
@@ -1203,11 +1213,8 @@ class Game {
           }
           renderStream();
         });
-        listEl.appendChild(row);
+        streamPanel.body.appendChild(row);
       });
-      if (!pending.length) {
-        listEl.innerHTML = `<div style="color:#46f0c0;font-size:11px;text-align:center;padding:8px;">Batch complete — new batch incoming</div>`;
-      }
     };
 
     const STEPS = [
@@ -1335,25 +1342,20 @@ class Game {
     const senderNodes = (mod.city?.nodes || []).filter(n => n.type === 'residential');
     senderNodes.forEach(n => cong.initSender(n.id, 0.3));
 
-    // Upgrade panel
-    const upgradeBox = document.createElement('div');
-    upgradeBox.style.cssText = 'margin-top:12px;';
-    sidePanel.appendChild(upgradeBox);
+    // Upgrade panel — floating overlay on canvas
+    const upgradePanel = makeFloatingPanel(canvasWrap, { title: 'Bottleneck Analyser', color: '#7fd8ff', icon: '⊙' });
 
     const renderUpgradePanel = () => {
       const edges = [...net.edges.values()];
-      const busy  = edges.filter(e => (e.load || 0) > 0.6).sort((a, b) => (b.load || 0) - (a.load || 0));
-      upgradeBox.innerHTML = `
-        <div style="font-size:11px;color:#7fd8ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
-          ⊙ Bottleneck Analysis
+      const busy  = edges.filter(e => (e.load || 0) > 0.5).sort((a, b) => (b.load || 0) - (a.load || 0));
+      upgradePanel.body.innerHTML = `
+        <div style="font-size:10px;color:#8aa6b4;margin-bottom:8px;">
+          Upgrades applied: <strong style="color:#7fd8ff;">${upgradesApplied}</strong>
+          &nbsp;|&nbsp; Hot links: <strong style="color:${busy.length ? '#ff6b6b' : '#46f0c0'}">${busy.length}</strong>
         </div>
-        <div style="font-size:10px;color:#8aa6b4;margin-bottom:6px;">Tap a congested link to upgrade its capacity:</div>
-        <div id="upgrade-list" style="display:flex;flex-direction:column;gap:4px;"></div>
-        <div style="margin-top:8px;font-size:10px;color:#8aa6b4;">Upgrades applied: <span style="color:#7fd8ff;font-weight:700;">${upgradesApplied}</span></div>
       `;
-      const listEl = upgradeBox.querySelector('#upgrade-list');
       if (!busy.length) {
-        listEl.innerHTML = '<div style="color:#46f0c0;font-size:11px;">No bottlenecks detected ✔</div>';
+        upgradePanel.body.innerHTML += '<div style="color:#46f0c0;font-size:11px;text-align:center;padding:8px;">No bottlenecks detected ✔</div>';
         return;
       }
       busy.slice(0, 4).forEach(edge => {
@@ -1362,32 +1364,38 @@ class Game {
         const load  = Math.round((edge.load || 0) * 100);
         const row   = document.createElement('div');
         row.style.cssText = `
-          padding:8px;border-radius:6px;
-          background:rgba(127,216,255,0.05);
-          border:1px solid rgba(127,216,255,0.2);
-          font-size:11px;color:#e0f4ec;cursor:pointer;
+          padding:8px 10px;border-radius:8px;
+          background:rgba(127,216,255,0.06);
+          border:1px solid ${load > 80 ? '#ff6b6b44' : '#7fd8ff33'};
+          margin-bottom:6px;
         `;
         row.innerHTML = `
-          <div style="font-weight:700;color:${load > 80 ? '#ff6b6b' : '#ffb454'};">${load}% load</div>
-          <div style="color:#8aa6b4;font-size:10px;">${nodeA?.label || '?'} ↔ ${nodeB?.label || '?'}</div>
-          <button class="upgrade-btn" style="margin-top:6px;width:100%;padding:4px;border-radius:4px;background:rgba(127,216,255,0.1);border:1px solid #7fd8ff;color:#7fd8ff;cursor:pointer;font-size:10px;">
-            ↑ Upgrade Capacity (cap: ${edge.capacity} → ${edge.capacity + 2})
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <div style="font-weight:700;font-size:13px;color:${load > 80 ? '#ff6b6b' : '#ffb454'};">${load}%</div>
+            <div style="flex:1;height:6px;border-radius:3px;background:#1a2a35;overflow:hidden;">
+              <div style="height:100%;width:${load}%;background:${load > 80 ? '#ff6b6b' : load > 60 ? '#ffb454' : '#46f0c0'};border-radius:3px;"></div>
+            </div>
+          </div>
+          <div style="color:#8aa6b4;font-size:10px;margin-bottom:6px;">${nodeA?.label || '?'} ↔ ${nodeB?.label || '?'} (cap: ${edge.capacity})</div>
+          <button class="upgrade-btn" style="width:100%;padding:6px;border-radius:6px;background:rgba(127,216,255,0.12);border:1px solid #7fd8ff;color:#7fd8ff;cursor:pointer;font-size:11px;font-weight:700;">
+            ↑ Upgrade to cap ${edge.capacity + 2}
           </button>
         `;
         row.querySelector('.upgrade-btn').addEventListener('click', () => {
+          const oldCap = edge.capacity;
           edge.capacity += 2;
           upgradesApplied++;
           assessment.record('efficient_route_chosen', { moduleId: 6 });
           assessment.record('load_balanced_optimally', { moduleId: 6 });
           ceLog.push(
             `Upgraded link ${nodeA?.label} ↔ ${nodeB?.label}`,
-            `Capacity increased from ${edge.capacity - 2} to ${edge.capacity} — that bottleneck can now handle more traffic`,
+            `Capacity increased from ${oldCap} to ${edge.capacity} — bottleneck relieved`,
             'Horizontal scaling: adding capacity to the most constrained resource'
           );
           conseq.explain('load_balanced');
           renderUpgradePanel();
         });
-        listEl.appendChild(row);
+        upgradePanel.body.appendChild(row);
       });
     };
 

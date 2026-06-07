@@ -84,15 +84,17 @@ html, body {
   margin-bottom: 6px;
 }
 .home-tagline {
-  font-size: 13px; color: var(--text-dim);
-  letter-spacing: 3px; text-transform: uppercase;
-  margin-bottom: 48px;
+  font-size: 12px; color: var(--text-dim);
+  letter-spacing: 2px; text-transform: uppercase;
+  margin-bottom: 40px; text-align: center;
+  padding: 0 24px; line-height: 1.6;
 }
 .home-actions {
   display: flex; flex-direction: column; align-items: center; gap: 12px;
-  width: 100%; max-width: 260px;
+  width: 100%; max-width: 280px; padding: 0 16px;
 }
-.home-secondary { display: flex; gap: 10px; }
+.home-secondary { display: flex; gap: 10px; width: 100%; }
+.home-secondary .btn { flex: 1; }
 
 /* ── Map select (world hub) ──────────────────────────────────────────── */
 .screen-worldmap {
@@ -472,7 +474,7 @@ button { font-family: var(--font-mono); cursor: pointer; border: none; outline: 
   overflow: hidden;
 }
 .modules-header {
-  padding: 60px 28px 12px; text-align: center;
+  padding: 56px 20px 10px; text-align: center;
 }
 .modules-title {
   font-family: var(--font-display); font-size: 22px; font-weight: 800;
@@ -583,12 +585,14 @@ button { font-family: var(--font-mono); cursor: pointer; border: none; outline: 
 
 /* ── Crisis banner ────────────────────────────────────────────────────── */
 .crisis-banner {
-  position: absolute; top: 56px; left: 50%; transform: translateX(-50%);
+  position: absolute; top: 48px; left: 50%; transform: translateX(-50%);
   background: rgba(255,107,107,0.15); border: 1px solid rgba(255,107,107,0.5);
-  border-radius: 8px; padding: 8px 18px; z-index: 60;
+  border-radius: 8px; padding: 7px 14px; z-index: 60;
   display: flex; gap: 8px; align-items: center;
-  font-size: 13px; color: var(--coral); white-space: nowrap;
+  font-size: 12px; color: var(--coral);
+  white-space: nowrap; max-width: 90vw;
   backdrop-filter: blur(8px);
+  text-overflow: ellipsis; overflow: hidden;
 }
 .crisis-icon { font-size: 16px; }
 .crisis-enter { animation: crisisSlide .3s cubic-bezier(.2,.7,.3,1); }
@@ -620,18 +624,141 @@ button { font-family: var(--font-mono); cursor: pointer; border: none; outline: 
 /* ── chrome-left ──────────────────────────────────────────────────────── */
 .chrome-left { display: flex; }
 
-/* ── Responsive for FutureOS ──────────────────────────────────────────── */
-@media (max-width: 600px) {
-  .side-panel    { width: 140px; padding: 8px; }
-  .twin-label    { display: none; }
-  .modules-grid  { grid-template-columns: 1fr 1fr; gap: 10px; }
-  .module-card   { padding: 12px 10px; }
+/* ══════════════════════════════════════════════════════════════════════════
+   GAME SCREEN LAYOUT
+   ══════════════════════════════════════════════════════════════════════════ */
+.game-screen {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: row;
+  background: #04101a;
+}
+.game-canvas-wrap {
+  flex: 1; position: relative;
+  overflow: hidden; min-width: 0; min-height: 0;
+}
+.game-canvas {
+  position: absolute; inset: 0;
+  display: block; width: 100%; height: 100%;
+  cursor: crosshair; touch-action: none;
+}
+
+/* ── Instruction box ─────────────────────────────────────────────────── */
+.instr-box {
+  position: absolute; top: 56px; left: 50%; transform: translateX(-50%);
+  background: rgba(7,26,36,0.95); border: 1px solid rgba(70,240,192,0.35);
+  border-radius: 12px; padding: 12px 18px; max-width: 420px; width: 90%;
+  font-size: 13px; line-height: 1.6; color: #a8d8c8; z-index: 50;
+  text-align: center; backdrop-filter: blur(8px);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+
+/* ── Step tracker ────────────────────────────────────────────────────── */
+.step-tracker {
+  position: absolute; bottom: 58px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 8px; align-items: center; z-index: 50;
+  background: rgba(7,26,36,0.85); border: 1px solid rgba(70,240,192,0.18);
+  border-radius: 20px; padding: 7px 14px; white-space: nowrap;
+  pointer-events: none;
+}
+.step-num   { color: #46f0c0; font-size: 12px; font-weight: 700; }
+.step-label { color: #8aa6b4; font-size: 12px; margin-left: 4px; }
+
+/* ── Floating gameplay panel (canvas overlay) ───────────────────────── */
+.floating-panel {
+  position: absolute; right: 12px; bottom: 90px;
+  width: min(260px, 42vw); max-height: 55vh; overflow-y: auto;
+  background: rgba(4,12,20,0.96);
+  border-radius: 14px; padding: 12px 14px; z-index: 55;
+  backdrop-filter: blur(12px);
+  transition: opacity 0.2s;
+}
+.floating-panel::-webkit-scrollbar { width: 4px; }
+.floating-panel::-webkit-scrollbar-track { background: transparent; }
+.floating-panel::-webkit-scrollbar-thumb { background: rgba(70,240,192,0.25); border-radius: 2px; }
+
+@media (max-width: 640px) {
+  .floating-panel {
+    width: calc(100% - 24px); right: 12px; bottom: 60px;
+    max-height: 40vh;
+  }
+}
+
+/* ── Goal bar widget ─────────────────────────────────────────────────── */
+.goal-bar-widget {
+  position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+  width: min(320px, 88%); z-index: 50;
+  background: rgba(7,26,36,0.92); border: 1px solid color-mix(in srgb, var(--goal-color, #46f0c0) 20%, transparent);
+  border-radius: 10px; padding: 7px 12px; backdrop-filter: blur(6px);
+  pointer-events: none;
+}
+
+/* ── Mobile game layout — bottom drawer ─────────────────────────────── */
+@media (max-width: 640px) {
+  .game-screen { flex-direction: column; }
+  .game-canvas-wrap { flex: 1; min-height: 0; }
+
+  /* Side panel becomes a bottom drawer */
+  .side-panel-drawer {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    width: 100% !important; max-width: 100% !important;
+    height: 52px; /* collapsed: just handle */
+    max-height: 55vh;
+    border-left: none !important;
+    border-top: 1px solid rgba(70,240,192,0.2);
+    border-radius: 16px 16px 0 0;
+    background: rgba(7,26,36,0.97);
+    overflow: hidden;
+    transition: height 0.3s cubic-bezier(.2,.7,.3,1);
+    z-index: 80;
+    backdrop-filter: blur(12px);
+    padding: 0 !important;
+  }
+  .side-panel-drawer.drawer-open {
+    height: 55vh;
+    overflow-y: auto;
+  }
+  .drawer-handle {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    height: 52px; cursor: pointer; user-select: none;
+    border-bottom: 1px solid rgba(70,240,192,0.1);
+    padding: 0 16px; flex-shrink: 0;
+  }
+  .drawer-pip {
+    width: 36px; height: 4px; border-radius: 2px;
+    background: rgba(70,240,192,0.3);
+  }
+  .drawer-tab-label {
+    font-size: 11px; color: #46f0c0; letter-spacing: 1px; text-transform: uppercase;
+  }
+
+  /* Instruction box — compact, at top */
+  .instr-box {
+    top: 6px; left: 44px; right: 8px;
+    transform: none;
+    font-size: 11px; padding: 7px 10px;
+    max-width: 100%; width: auto;
+    text-align: left;
+  }
+  .step-tracker {
+    bottom: 58px; font-size: 11px; padding: 5px 10px;
+    max-width: calc(100vw - 16px);
+  }
+  .goal-bar-widget { bottom: 54px; }
+
+  /* modules grid: 2 columns tight */
+  .modules-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .module-card  { padding: 14px 10px; }
   .briefing-body { padding: 16px; }
+  .twin-label   { display: none; }
+
+  /* Triage / stream boxes inside drawer get proper padding */
+  .side-panel-drawer > *:not(.drawer-handle) { padding: 12px; }
 }
 @media (max-width: 400px) {
-  .side-panel { width: 110px; }
-  .twin-row   { grid-template-columns: 14px 1fr 22px; }
-  .twin-num   { display: none; }
+  .instr-box { font-size: 11px; padding: 8px 10px; }
+  .twin-row  { grid-template-columns: 14px 1fr 22px; }
+  .twin-num  { display: none; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -951,19 +1078,67 @@ button { font-family: var(--font-mono); cursor: pointer; border: none; outline: 
 .result-report-btn { width: 100%; margin-top: 8px; font-size: 12px; }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   RESPONSIVE — new components
+   RESPONSIVE — all components
    ══════════════════════════════════════════════════════════════════════════ */
-@media (max-width: 600px) {
-  .prediction-card, .reflection-card { padding: 24px 16px; }
+@media (max-width: 640px) {
+  /* Prediction / Reflection */
+  .prediction-card, .reflection-card { padding: 20px 14px; }
+  .prediction-question { font-size: 15px; }
+  .prediction-option { padding: 11px 12px; gap: 10px; }
+  .pred-opt-icon { font-size: 18px; }
+  .pred-opt-text { font-size: 13px; }
+
+  /* Cause-effect */
   .ce-row { grid-template-columns: 1fr; }
   .ce-arrow { display: none; }
+
+  /* Report */
   .report-overall-row { flex-direction: column; align-items: flex-start; }
   .report-radar { width: 100px; height: 100px; }
   .report-stats-row { flex-direction: column; }
-  .consequence-panel { width: calc(100vw - 24px); }
+
+  /* Consequence panel — full width on mobile */
+  .consequence-panel { width: calc(100vw - 16px); left: 8px; right: 8px; }
+
+  /* Prediction comparison */
   .pred-compare-row { flex-direction: column; }
   .pred-compare-arrow { display: none; }
   .tradeoff-columns { flex-direction: column; }
+
+  /* Crisis banner — allow wrapping */
+  .crisis-banner { white-space: normal; text-align: center; max-width: 90vw; font-size: 12px; }
+
+  /* Touch targets — minimum 44px */
+  button, [role=button] { min-height: 40px; }
+  .btn-xl { padding: 14px 24px; font-size: 15px; }
+
+  /* Briefing on mobile */
+  .screen-briefing { padding-top: 48px; }
+  .briefing-body { padding: 16px; }
+  .briefing-icon { font-size: 36px; }
+
+  /* Triage / firewall rows — bigger tap targets */
+  #triage-queue > div, #stream-list > div { padding: 10px 10px; }
+  .triage-up { min-width: 36px; min-height: 36px; font-size: 18px; }
+  .pkt-allow, .pkt-block { min-height: 36px; font-size: 12px; }
+
+  /* Back btn */
+  .btn-back-missions { font-size: 12px; padding: 8px 12px; }
+
+  /* Home screen */
+  .home-wordmark { font-size: clamp(32px, 10vw, 52px); }
+  .home-module-icons { gap: 16px; }
+
+  /* Module select */
+  .modules-header { padding: 48px 16px 8px; }
+  .modules-title { font-size: 18px; }
+}
+
+@media (max-width: 400px) {
+  .modules-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .module-card  { padding: 10px 8px; }
+  .mod-title    { font-size: 13px; }
+  .mod-sub      { display: none; }
 }
 
 @media print {
