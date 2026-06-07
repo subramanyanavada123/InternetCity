@@ -60,7 +60,7 @@ export function renderSplash(app, onDone) {
 }
 
 // ── Home / Academy ────────────────────────────────────────────────────────
-export function renderHome(app, { onPlay, onTeacher, onSettings, hasProgress }) {
+export function renderHome(app, { onPlay, onTeacher, onSettings, onReport, hasProgress }) {
   app.innerHTML = '';
   const s = el('div', 'screen-home screen-enter');
 
@@ -73,12 +73,15 @@ export function renderHome(app, { onPlay, onTeacher, onSettings, hasProgress }) 
     </div>
   `;
   const actions = el('div', 'home-actions');
-  const playBtn = btn('btn btn-primary btn-xl', hasProgress ? '▶  Continue Mission' : '▶  Start Academy', onPlay);
+  const playBtn = btn('btn btn-primary btn-xl', hasProgress ? '▶  Continue Missions' : '▶  Start as Engineer', onPlay);
   playBtn.autofocus = true;
   const secondary = el('div', 'home-secondary');
   secondary.appendChild(btn('btn btn-ghost', '⊛ For Teachers', onTeacher));
   secondary.appendChild(btn('btn btn-ghost', '⚙ Settings',    onSettings));
   actions.appendChild(playBtn);
+  if (hasProgress && onReport) {
+    actions.appendChild(btn('btn btn-ghost home-report-btn', '◈ My Engineer Report', onReport));
+  }
   actions.appendChild(secondary);
   s.appendChild(actions);
   app.appendChild(s);
@@ -167,13 +170,13 @@ export function renderMissionBriefing(app, { module: mod, onStart, onBack }) {
 }
 
 // ── Results / After-action ─────────────────────────────────────────────────
-export function renderResults(app, { stars, stats, conceptReveal, onNext, onRetry, isCity }) {
+export function renderResults(app, { stars, stats, conceptReveal, onNext, onRetry, onReport, isCity }) {
   const backdrop = el('div', 'overlay-back');
   const card = el('div', 'result-card');
 
   const tier = stars >= 3 ? { title: 'Outstanding!',       color: 'var(--teal)'  }
              : stars >= 2 ? { title: 'Mission Complete!',   color: 'var(--amber)' }
-             :               { title: 'Needs Work.',         color: 'var(--slate)' };
+             :               { title: 'Keep Exploring.',     color: 'var(--slate)' };
 
   const starsHtml = Array.from({ length: stars }, (_, i) =>
     `<span class="star-pop" style="animation-delay:${i*.1}s">★</span>`
@@ -201,12 +204,19 @@ export function renderResults(app, { stars, stats, conceptReveal, onNext, onRetr
         <div class="concept-body">${conceptReveal}</div>
       </div>
     ` : ''}
+    <div class="result-engineer-note">Your thinking was assessed. Check your Engineer Report to see how you\'re developing.</div>
   `;
 
   const actions = el('div', 'result-actions');
-  actions.appendChild(btn('btn btn-ghost', '↩ Retry', () => { backdrop.remove(); onRetry(); }));
-  actions.appendChild(btn('btn btn-primary', isCity ? 'Next Module ▶' : 'Next ▶', () => { backdrop.remove(); onNext(); }));
+  actions.appendChild(btn('btn btn-ghost', '↩ Try Again', () => { backdrop.remove(); onRetry(); }));
+  actions.appendChild(btn('btn btn-primary', isCity ? 'Next Mission ▶' : 'Next ▶', () => { backdrop.remove(); onNext(); }));
   card.appendChild(actions);
+
+  if (onReport) {
+    const reportBtn = btn('btn btn-ghost result-report-btn', '◈ View My Engineer Report', () => { backdrop.remove(); onReport(); });
+    card.appendChild(reportBtn);
+  }
+
   backdrop.appendChild(card);
   app.appendChild(backdrop);
 
@@ -215,7 +225,7 @@ export function renderResults(app, { stars, stats, conceptReveal, onNext, onRetr
 }
 
 // ── Teacher view ──────────────────────────────────────────────────────────
-export function renderTeacher(app, { progress, onBack }) {
+export function renderTeacher(app, { progress, assessment, onBack, onReport }) {
   app.innerHTML = '';
   const s = el('div', 'screen-teacher screen-enter');
   s.appendChild(makeChrome('For Teachers', { onBack }));
@@ -231,14 +241,74 @@ export function renderTeacher(app, { progress, onBack }) {
     { icon: '⊙', label: 'Algorithms & Optimization',  modId: 6, desc: 'Search, sort, shortest path, load balancing' },
   ];
 
-  const hasAny = Object.keys(progress.moduleStars || {}).length > 0 ||
-                 Object.keys(progress.scenarioStars || {}).length > 0;
+  const hasAny = Object.keys(progress.moduleStars || {}).length > 0;
+
+  // Thinking dimensions section (from assessment engine)
+  const DIMS = [
+    { key: 'systemsThinking',      icon: '◈', label: 'Systems Thinking',     color: '#46f0c0' },
+    { key: 'resilienceThinking',   icon: '⚡', label: 'Resilience Thinking',  color: '#c9b6ff' },
+    { key: 'optimizationThinking', icon: '⊙', label: 'Optimization',          color: '#7fd8ff' },
+    { key: 'ethicalReasoning',     icon: '⊕', label: 'Ethical Reasoning',     color: '#ff6b6b' },
+    { key: 'engineeringReasoning', icon: '⊛', label: 'Engineering Reasoning', color: '#ffb454' },
+  ];
+
+  const report = assessment?.generateReport?.() || null;
 
   if (!hasAny) {
     const empty = el('div', 'teacher-empty',
       'No sessions yet — hand the device to a student to begin.');
     content.appendChild(empty);
   } else {
+    // Thinking Dimensions section
+    if (report) {
+      const dimHeader = el('div', 'teacher-section-title', '◈ Thinking Dimensions');
+      content.appendChild(dimHeader);
+
+      DIMS.forEach(d => {
+        const val = report.scores[d.key] ?? 50;
+        const row = el('div', 'mastery-row');
+        row.innerHTML = `
+          <span class="mastery-icon" style="color:${d.color}">${d.icon}</span>
+          <div class="mastery-info">
+            <div class="mastery-concept">${d.label}</div>
+            <div class="teacher-dim-bar-wrap">
+              <div class="teacher-dim-bar" style="width:${val}%;background:${d.color};"></div>
+            </div>
+          </div>
+          <span class="mastery-score" style="color:${d.color}">${val}</span>
+        `;
+        content.appendChild(row);
+      });
+
+      const predNote = report.predictionCount > 0 ? `
+        <div class="teacher-stat-row">
+          <span>Prediction Accuracy</span>
+          <span style="color:#46f0c0">${report.predictionAccuracy}% (${report.predictionCount} predictions)</span>
+        </div>
+      ` : '';
+      const statBox = el('div', 'teacher-stats-box', `
+        <div class="teacher-stat-row">
+          <span>Overall Score</span>
+          <span style="color:#46f0c0;font-weight:700;">${report.overallScore}/100</span>
+        </div>
+        <div class="teacher-stat-row">
+          <span>Decision Quality</span>
+          <span style="color:#ffb454">${report.decisionQuality}%</span>
+        </div>
+        ${predNote}
+      `);
+      content.appendChild(statBox);
+
+      if (onReport) {
+        const reportBtn = btn('btn btn-ghost teacher-report-btn', '◈ View Full Engineer Report', onReport);
+        content.appendChild(reportBtn);
+      }
+    }
+
+    // Module mastery section
+    const modHeader = el('div', 'teacher-section-title', '◈ Module Mastery');
+    content.appendChild(modHeader);
+
     concepts.forEach(c => {
       const v = (progress.moduleStars || {})[c.modId] || 0;
       const attempted = v > 0;
@@ -265,7 +335,7 @@ export function renderTeacher(app, { progress, onBack }) {
 }
 
 // ── Settings ──────────────────────────────────────────────────────────────
-export function renderSettings(app, { onBack }) {
+export function renderSettings(app, { onBack, onResetAssessment }) {
   app.innerHTML = '';
   const s = el('div', 'screen-settings screen-enter');
   s.appendChild(makeChrome('Settings', { onBack }));
@@ -292,15 +362,25 @@ export function renderSettings(app, { onBack }) {
   addToggle('✨', 'Animations',     'ic_anim',  true);
 
   const resetRow = el('div', 'settings-row');
-  resetRow.innerHTML = `<span class="settings-icon">⊗</span><span class="settings-label">Reset Progress</span>`;
+  resetRow.innerHTML = `<span class="settings-icon">⊗</span><span class="settings-label">Reset Mission Progress</span>`;
   resetRow.appendChild(btn('btn btn-ghost', 'Reset', () => {
-    if (confirm('Reset all progress?')) {
+    if (confirm('Reset all mission progress?')) {
       localStorage.removeItem('ic_progress');
       localStorage.removeItem('futureos_progress');
       onBack();
     }
   }));
   list.appendChild(resetRow);
+
+  const resetAssessRow = el('div', 'settings-row');
+  resetAssessRow.innerHTML = `<span class="settings-icon">◈</span><span class="settings-label">Reset Engineer Report</span>`;
+  resetAssessRow.appendChild(btn('btn btn-ghost', 'Reset', () => {
+    if (confirm('Reset your Engineer Report and thinking scores?')) {
+      onResetAssessment?.();
+      onBack();
+    }
+  }));
+  list.appendChild(resetAssessRow);
 
   s.appendChild(list);
 

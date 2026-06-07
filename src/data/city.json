@@ -105,10 +105,33 @@
       "color": "#ff6b6b",
       "concept": "Priority Queues",
       "conceptReveal": "You triaged the network — emergency first, then critical, then normal. That is a priority queue, and it is how hospitals, 911 systems, and internet routing all work.",
-      "description": "Keep critical services at highest priority during overload.",
+      "description": "A mass casualty event has overwhelmed the hospital network. Triage the incoming data queue — emergencies first, normal traffic last.",
       "goal": { "type": "priorityScore", "target": 0.75 },
-      "crisisEvent": { "type": "hospitalSurge", "tick": 30, "label": "🚑 Mass casualty event — hospital overwhelmed!", "loadMultiplier": 4 },
-      "locked": false
+      "crisisEvent": { "type": "hospitalSurge", "tick": 40, "label": "🚑 Mass casualty event — hospital overwhelmed!", "loadMultiplier": 4 },
+      "city": {
+        "nodes": [
+          { "id": 0,  "type": "datacenter",  "x": 0.50, "y": 0.50, "label": "Hospital Core",  "emoji": "▣" },
+          { "id": 1,  "type": "tower",       "x": 0.25, "y": 0.30, "label": "ICU Wing",        "emoji": "◈" },
+          { "id": 2,  "type": "tower",       "x": 0.75, "y": 0.30, "label": "Surgery Wing",    "emoji": "◈" },
+          { "id": 3,  "type": "hospital",    "x": 0.15, "y": 0.50, "label": "A&E",             "emoji": "⊕" },
+          { "id": 4,  "type": "emergency",   "x": 0.85, "y": 0.50, "label": "Cardiac Unit",    "emoji": "⊛" },
+          { "id": 5,  "type": "residential", "x": 0.25, "y": 0.75, "label": "Admin Block",     "emoji": "⌂" },
+          { "id": 6,  "type": "residential", "x": 0.75, "y": 0.75, "label": "Pharmacy",        "emoji": "⌂" },
+          { "id": 7,  "type": "router",      "x": 0.38, "y": 0.50, "label": "Router W",        "emoji": "○" },
+          { "id": 8,  "type": "router",      "x": 0.62, "y": 0.50, "label": "Router E",        "emoji": "○" }
+        ],
+        "links": [
+          { "a": 0, "b": 7,  "type": "fiber",    "capacity": 6, "up": true },
+          { "a": 0, "b": 8,  "type": "fiber",    "capacity": 6, "up": true },
+          { "a": 7, "b": 1,  "type": "wireless", "capacity": 4, "up": true },
+          { "a": 8, "b": 2,  "type": "wireless", "capacity": 4, "up": true },
+          { "a": 1, "b": 3,  "type": "wireless", "capacity": 3, "up": true },
+          { "a": 2, "b": 4,  "type": "wireless", "capacity": 3, "up": true },
+          { "a": 7, "b": 5,  "type": "wireless", "capacity": 3, "up": true },
+          { "a": 8, "b": 6,  "type": "wireless", "capacity": 3, "up": true }
+        ],
+        "emergencyNodes": [3, 4]
+      }
     },
     {
       "id": 4,
@@ -118,10 +141,33 @@
       "color": "#c9b6ff",
       "concept": "Redundancy & Failover",
       "conceptReveal": "You kept the city running even when towers failed — by having backup paths. That is redundancy, the design principle that makes the internet survive disasters.",
-      "description": "Maintain city operation after tower failures.",
+      "description": "A storm is coming. Add backup links before towers fail — buildings with only one path will go offline when it hits.",
       "goal": { "type": "resilience", "target": 0.70 },
-      "crisisEvent": { "type": "storm", "tick": 40, "label": "🌩️ Storm — towers failing!", "downLinks": [[1,5],[2,8]] },
-      "locked": false
+      "crisisEvent": { "type": "storm", "tick": 60, "label": "🌩️ Storm — towers failing!", "downLinks": [[1,3],[2,4]] },
+      "city": {
+        "nodes": [
+          { "id": 0,  "type": "datacenter",  "x": 0.50, "y": 0.50, "label": "Core DC",      "emoji": "▣" },
+          { "id": 1,  "type": "tower",       "x": 0.22, "y": 0.22, "label": "Tower N",       "emoji": "◈" },
+          { "id": 2,  "type": "tower",       "x": 0.78, "y": 0.22, "label": "Tower E",       "emoji": "◈" },
+          { "id": 3,  "type": "hospital",    "x": 0.12, "y": 0.50, "label": "Hospital",      "emoji": "⊕" },
+          { "id": 4,  "type": "emergency",   "x": 0.88, "y": 0.50, "label": "Fire Stn",      "emoji": "⊛" },
+          { "id": 5,  "type": "residential", "x": 0.22, "y": 0.78, "label": "Homes N",       "emoji": "⌂" },
+          { "id": 6,  "type": "residential", "x": 0.78, "y": 0.78, "label": "Homes E",       "emoji": "⌂" },
+          { "id": 7,  "type": "router",      "x": 0.35, "y": 0.50, "label": "Router W",      "emoji": "○" },
+          { "id": 8,  "type": "router",      "x": 0.65, "y": 0.50, "label": "Router E",      "emoji": "○" }
+        ],
+        "links": [
+          { "a": 0, "b": 7, "type": "fiber",    "capacity": 6, "up": true },
+          { "a": 0, "b": 8, "type": "fiber",    "capacity": 6, "up": true },
+          { "a": 7, "b": 1, "type": "wireless", "capacity": 4, "up": true },
+          { "a": 8, "b": 2, "type": "wireless", "capacity": 4, "up": true },
+          { "a": 1, "b": 3, "type": "wireless", "capacity": 3, "up": true },
+          { "a": 2, "b": 4, "type": "wireless", "capacity": 3, "up": true },
+          { "a": 7, "b": 5, "type": "wireless", "capacity": 3, "up": true },
+          { "a": 8, "b": 6, "type": "wireless", "capacity": 3, "up": true }
+        ],
+        "emergencyNodes": [3, 4]
+      }
     },
     {
       "id": 5,
@@ -131,10 +177,31 @@
       "color": "#ff6b6b",
       "concept": "Cybersecurity & Filtering",
       "conceptReveal": "You identified and blocked malicious traffic while letting real messages through. That is a firewall — the gatekeeper of every network.",
-      "description": "Detect and block malicious traffic before it reaches critical systems.",
+      "description": "Malicious packets are flooding the city network. Block the fakes — but every legitimate packet you block costs the city.",
       "goal": { "type": "securityScore", "target": 0.80 },
-      "crisisEvent": { "type": "cyberAttack", "tick": 20, "label": "☠️ Cyber attack — spoofed packets detected!", "fakeRatio": 0.40 },
-      "locked": false
+      "crisisEvent": { "type": "cyberAttack", "tick": 30, "label": "☠️ Cyber attack — spoofed packets detected!", "fakeRatio": 0.40 },
+      "city": {
+        "nodes": [
+          { "id": 0, "type": "datacenter",  "x": 0.50, "y": 0.50, "label": "Core DC",      "emoji": "▣" },
+          { "id": 1, "type": "tower",       "x": 0.25, "y": 0.25, "label": "Firewall N",    "emoji": "◈" },
+          { "id": 2, "type": "tower",       "x": 0.75, "y": 0.25, "label": "Firewall E",    "emoji": "◈" },
+          { "id": 3, "type": "hospital",    "x": 0.15, "y": 0.50, "label": "Hospital",      "emoji": "⊕" },
+          { "id": 4, "type": "emergency",   "x": 0.85, "y": 0.50, "label": "Fire Stn",      "emoji": "⊛" },
+          { "id": 5, "type": "residential", "x": 0.50, "y": 0.82, "label": "Residences",    "emoji": "⌂" },
+          { "id": 6, "type": "router",      "x": 0.35, "y": 0.50, "label": "Router W",      "emoji": "○" },
+          { "id": 7, "type": "router",      "x": 0.65, "y": 0.50, "label": "Router E",      "emoji": "○" }
+        ],
+        "links": [
+          { "a": 0, "b": 6, "type": "fiber",    "capacity": 6, "up": true },
+          { "a": 0, "b": 7, "type": "fiber",    "capacity": 6, "up": true },
+          { "a": 6, "b": 1, "type": "wireless", "capacity": 4, "up": true },
+          { "a": 7, "b": 2, "type": "wireless", "capacity": 4, "up": true },
+          { "a": 1, "b": 3, "type": "wireless", "capacity": 3, "up": true },
+          { "a": 2, "b": 4, "type": "wireless", "capacity": 3, "up": true },
+          { "a": 6, "b": 5, "type": "wireless", "capacity": 3, "up": true }
+        ],
+        "emergencyNodes": [3, 4]
+      }
     },
     {
       "id": 6,
@@ -144,10 +211,36 @@
       "color": "#7fd8ff",
       "concept": "Algorithms & Optimization",
       "conceptReveal": "You sorted repair priorities, found the most efficient routes, and balanced load. That is algorithmic thinking — search, sort, optimize — the core of all software.",
-      "description": "Maintain performance as population grows to 2 million.",
+      "description": "The city's population has doubled overnight. Find the bottlenecks and upgrade the most critical links to restore performance.",
       "goal": { "type": "performanceScore", "target": 0.75 },
       "crisisEvent": { "type": "populationBurst", "tick": 50, "label": "📈 Population doubled overnight!", "loadMultiplier": 2.5 },
-      "locked": false
+      "city": {
+        "nodes": [
+          { "id": 0, "type": "datacenter",  "x": 0.50, "y": 0.50, "label": "Core DC",      "emoji": "▣" },
+          { "id": 1, "type": "tower",       "x": 0.25, "y": 0.20, "label": "Tower N",       "emoji": "◈" },
+          { "id": 2, "type": "tower",       "x": 0.75, "y": 0.20, "label": "Tower E",       "emoji": "◈" },
+          { "id": 3, "type": "tower",       "x": 0.25, "y": 0.80, "label": "Tower W",       "emoji": "◈" },
+          { "id": 4, "type": "tower",       "x": 0.75, "y": 0.80, "label": "Tower S",       "emoji": "◈" },
+          { "id": 5, "type": "residential", "x": 0.12, "y": 0.35, "label": "District A",    "emoji": "⌂" },
+          { "id": 6, "type": "residential", "x": 0.88, "y": 0.35, "label": "District B",    "emoji": "⌂" },
+          { "id": 7, "type": "residential", "x": 0.12, "y": 0.65, "label": "District C",    "emoji": "⌂" },
+          { "id": 8, "type": "residential", "x": 0.88, "y": 0.65, "label": "District D",    "emoji": "⌂" },
+          { "id": 9, "type": "router",      "x": 0.35, "y": 0.50, "label": "Router W",      "emoji": "○" },
+          { "id": 10,"type": "router",      "x": 0.65, "y": 0.50, "label": "Router E",      "emoji": "○" }
+        ],
+        "links": [
+          { "a": 0,  "b": 9,  "type": "fiber",    "capacity": 4, "up": true },
+          { "a": 0,  "b": 10, "type": "fiber",    "capacity": 4, "up": true },
+          { "a": 9,  "b": 1,  "type": "wireless", "capacity": 3, "up": true },
+          { "a": 10, "b": 2,  "type": "wireless", "capacity": 3, "up": true },
+          { "a": 9,  "b": 3,  "type": "wireless", "capacity": 3, "up": true },
+          { "a": 10, "b": 4,  "type": "wireless", "capacity": 3, "up": true },
+          { "a": 1,  "b": 5,  "type": "wireless", "capacity": 2, "up": true },
+          { "a": 2,  "b": 6,  "type": "wireless", "capacity": 2, "up": true },
+          { "a": 3,  "b": 7,  "type": "wireless", "capacity": 2, "up": true },
+          { "a": 4,  "b": 8,  "type": "wireless", "capacity": 2, "up": true }
+        ]
+      }
     }
   ],
   "crisisTypes": {

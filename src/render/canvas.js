@@ -48,13 +48,13 @@ export class CanvasRenderer {
   _resize() {
     const rect = this.canvas.parentElement?.getBoundingClientRect()
                ?? { width: window.innerWidth, height: window.innerHeight };
-    this._w = rect.width;
-    this._h = rect.height;
+    this._w = rect.width  || window.innerWidth;
+    this._h = rect.height || window.innerHeight;
     this.canvas.width  = this._w * this._dpr;
     this.canvas.height = this._h * this._dpr;
     this.canvas.style.width  = this._w + 'px';
     this.canvas.style.height = this._h + 'px';
-    this.ctx.scale(this._dpr, this._dpr);
+    this.ctx.setTransform(this._dpr, 0, 0, this._dpr, 0, 0);
   }
 
   // Convert 0..1 node coords to canvas px
@@ -90,7 +90,6 @@ export class CanvasRenderer {
   render(net, packets, { scopeNode = null } = {}) {
     const ctx = this.ctx;
     const W = this._w, H = this._h;
-
     // ── Background ────────────────────────────────────────────────────
     const grad = ctx.createLinearGradient(0, 0, W, H);
     grad.addColorStop(0, C.bg0);

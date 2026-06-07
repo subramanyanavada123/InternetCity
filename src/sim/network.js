@@ -43,6 +43,19 @@ export class Network {
     return this.edges.get(`${a}-${b}`) || this.edges.get(`${b}-${a}`) || null;
   }
 
+  // Add a new edge at runtime (used by redundancy module for backup links)
+  addEdge({ a, b, capacity = 3, up = true }) {
+    const id = `${a}-${b}`;
+    if (this.edges.has(id) || this.edges.has(`${b}-${a}`)) return false;
+    const edge = { id, a, b, capacity, up, load: 0 };
+    this.edges.set(id, edge);
+    if (!this.adjList.has(a)) this.adjList.set(a, []);
+    if (!this.adjList.has(b)) this.adjList.set(b, []);
+    this.adjList.get(a).push(id);
+    this.adjList.get(b).push(id);
+    return edge;
+  }
+
   neighbors(nodeId) {
     return (this.adjList.get(nodeId) || [])
       .map(eid => this.edges.get(eid))
