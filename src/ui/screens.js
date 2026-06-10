@@ -108,8 +108,8 @@ export function renderModuleSelect(app, { modules, progress, onSelect, onBack, o
         <div class="modules-sub">Each mission teaches real engineering concepts</div>
       </div>
       <div style="display:inline-flex;border-radius:20px;overflow:hidden;border:1px solid rgba(70,240,192,0.2);font-size:11px;font-weight:700;">
-        <span style="padding:7px 14px;background:rgba(70,240,192,0.15);color:#46f0c0;border-right:1px solid rgba(70,240,192,0.15);">V1 Classic</span>
-        <a href="${v2Url}" style="padding:7px 14px;text-decoration:none;color:#8aa6b4;transition:color 0.2s;" onmouseover="this.style.color='#46f0c0'" onmouseout="this.style.color='#8aa6b4'">V2 New ✦</a>
+        <a href="${v2Url}" style="padding:7px 14px;text-decoration:none;color:#8aa6b4;border-right:1px solid rgba(70,240,192,0.15);transition:color 0.2s;" onmouseover="this.style.color='#46f0c0'" onmouseout="this.style.color='#8aa6b4'">Beginner</a>
+        <span style="padding:7px 14px;background:rgba(70,240,192,0.15);color:#46f0c0;">Advanced ✦</span>
       </div>
     </div>
   `;
