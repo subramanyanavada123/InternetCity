@@ -1,555 +1,468 @@
 import { makeGameShell, makeHUD, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
 
-// ─── Layout helpers ──────────────────────────────────────────────────────────
-const NODE_DEFS = [
-  { id: 'src',  fx: 0.08, fy: 0.50, label: '🏊', gate: false },
-  { id: 'jA',   fx: 0.35, fy: 0.28, label: '🔵', gate: true  },
-  { id: 'jB',   fx: 0.65, fy: 0.28, label: '🔵', gate: true  },
-  { id: 'jC',   fx: 0.35, fy: 0.72, label: '🔵', gate: true  },
-  { id: 'jD',   fx: 0.65, fy: 0.72, label: '🔵', gate: true  },
-  { id: 'snk',  fx: 0.92, fy: 0.50, label: '🌊', gate: false },
+// ── Network topology — 4 zones, each needs water ──────────────────────────────
+//
+//  SRC ──► R1 ──► R2 ──► ZONE-A (🏖️)
+//           │      │
+//           ▼      ▼
+//          R3 ──► R4 ──► ZONE-B (🏊)
+//           │      │
+//           ▼      ▼
+//          R5 ──► R6 ──► ZONE-C (🎢)
+//                  │
+//                  ▼
+//                ZONE-D (🌊)  (hardest to reach)
+//
+// Routers (R1–R6) can be opened/closed. Player must open the right ones
+// so that water reaches ALL 4 zones simultaneously, while staying under
+// a congestion budget. Surge events double demand mid-game.
+
+const NODES = [
+  { id:'src',  fx:0.05, fy:0.50, kind:'src',   label:'💦' },
+  { id:'r1',   fx:0.25, fy:0.25, kind:'router', label:'R1' },
+  { id:'r2',   fx:0.50, fy:0.20, kind:'router', label:'R2' },
+  { id:'r3',   fx:0.25, fy:0.50, kind:'router', label:'R3' },
+  { id:'r4',   fx:0.50, fy:0.50, kind:'router', label:'R4' },
+  { id:'r5',   fx:0.25, fy:0.75, kind:'router', label:'R5' },
+  { id:'r6',   fx:0.50, fy:0.75, kind:'router', label:'R6' },
+  { id:'zA',   fx:0.82, fy:0.18, kind:'zone',   label:'🏖️', name:'Beach' },
+  { id:'zB',   fx:0.82, fy:0.42, kind:'zone',   label:'🏊', name:'Pool' },
+  { id:'zC',   fx:0.82, fy:0.65, kind:'zone',   label:'🎢', name:'Slides' },
+  { id:'zD',   fx:0.65, fy:0.88, kind:'zone',   label:'🌊', name:'Wave Pool' },
 ];
 
-const PIPE_DEFS = [
-  { from: 'src', to: 'jA',  cap: 2 },
-  { from: 'src', to: 'jC',  cap: 2 },
-  { from: 'jA',  to: 'jB',  cap: 1 },
-  { from: 'jC',  to: 'jD',  cap: 1 },
-  { from: 'jA',  to: 'jD',  cap: 1 },
-  { from: 'jB',  to: 'snk', cap: 2 },
-  { from: 'jD',  to: 'snk', cap: 2 },
+const PIPES = [
+  { id:0, from:'src', to:'r1', cap:3 },
+  { id:1, from:'src', to:'r3', cap:3 },
+  { id:2, from:'src', to:'r5', cap:2 },
+  { id:3, from:'r1',  to:'r2', cap:2 },
+  { id:4, from:'r1',  to:'r3', cap:1 },
+  { id:5, from:'r2',  to:'r4', cap:1 },
+  { id:6, from:'r2',  to:'zA', cap:2 },
+  { id:7, from:'r3',  to:'r4', cap:2 },
+  { id:8, from:'r3',  to:'r5', cap:1 },
+  { id:9, from:'r4',  to:'zB', cap:2 },
+  { id:10,from:'r4',  to:'r6', cap:1 },
+  { id:11,from:'r5',  to:'r6', cap:2 },
+  { id:12,from:'r6',  to:'zC', cap:2 },
+  { id:13,from:'r6',  to:'zD', cap:1 },
 ];
 
-const TOTAL_TIME  = 60;
-const SURGE_START = 15;
-const SURGE_DUR   = 20;
-const BASE_SPAWN  = 0.4;   // seconds
-const BLOB_SPEED  = 0.28;  // fraction-of-pipe per second (normal)
-const BLOB_SLOW   = 0.30;  // fraction of normal when congested
-const GOAL_1      = 30;
-const GOAL_2      = 60;
-const UPGRADE_COST = 20;
-const INIT_BUDGET  = 100;
-const COINS_WIN    = [0, 30, 50, 80];
+const ZONE_IDS   = ['zA','zB','zC','zD'];
+const ZONE_NEED  = 8;   // packets needed per zone to "fill" it
+const TOTAL_TIME = 75;
+const BASE_SPAWN = 0.35;
+const SURGE_AT   = 20;
+const SURGE_DUR  = 18;
+const BLOB_SPEED = 0.25;
 
 export function launch(app, state, onComplete) {
-  // ── Shell ──────────────────────────────────────────────────────────────────
-  const shell = makeGameShell(app, { bgColor: '#001a2e' });
-  const { root, canvas, ctx: getCtx, W, H, destroy } = shell;
+  const shell = makeGameShell(app, { bgColor: '#001828' });
+  const { root, canvas, ctx: getCtx, W, H, destroy, canvasXY } = shell;
   const hud = makeHUD(root, { color: '#44ccff' });
 
-  // ── Game state ─────────────────────────────────────────────────────────────
-  let nodes = NODE_DEFS.map(n => ({ ...n, open: true }));
-  let pipes = PIPE_DEFS.map((p, i) => ({ ...p, index: i, load: 0, cap: p.cap, upgFlash: 0 }));
-  let blobs = [];
-  let particles = [];
-  let floaters = [];
-  let delivered = 0;
-  let budget = INIT_BUDGET;
-  let spawnTimer = 0;
-  let gameTime = 0;
+  // ── State ─────────────────────────────────────────────────────────────────
+  let nodes = NODES.map(n => ({ ...n, open: n.kind !== 'router' })); // routers start closed
+  let pipes = PIPES.map(p => ({ ...p, load: 0, upgFlash: 0 }));
+  let blobs       = [];
+  let particles   = [];
+  let floaters    = [];
+  let zoneFill    = { zA:0, zB:0, zC:0, zD:0 };
+  let delivered   = 0;
+  let spawnTimer  = 0;
+  let gameTime    = 0;
   let surgeActive = false;
-  let ended = false;
-  let lastNow = null;
+  let ended       = false;
+  let lastNow     = null;
+  let rafId;
+  let hintShown   = false;
 
-  // Build adjacency once; recalc routes when gates toggle
-  function nodeById(id) { return nodes.find(n => n.id === id); }
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  const nodeById = id => nodes.find(n => n.id === id);
+  const nodePos  = id => { const n = nodeById(id); return { x: n.fx * W(), y: n.fy * H() }; };
+  const pipeMid  = p  => { const a = nodePos(p.from), b = nodePos(p.to); return { x:(a.x+b.x)/2, y:(a.y+b.y)/2 }; };
 
-  // BFS from src to snk respecting open gates — returns array of pipe indices or null
-  function findRoute() {
-    const adj = {};
-    nodes.forEach(n => { adj[n.id] = []; });
-    pipes.forEach((p, i) => {
-      const fromN = nodeById(p.from);
-      const toN   = nodeById(p.to);
-      if (fromN && toN && (fromN.id === 'src' || fromN.open) && (toN.id === 'snk' || toN.open)) {
-        adj[p.from].push({ to: p.to, pipe: i });
-      }
-    });
-    // BFS
-    const visited = new Set(['src']);
-    const queue = [{ node: 'src', path: [] }];
+  // BFS: find ALL paths from src to a given zone (through open routers)
+  function bfsPath(fromId, toId) {
+    const visited = new Set([fromId]);
+    const queue = [{ node: fromId, path: [] }];
     while (queue.length) {
       const { node, path } = queue.shift();
-      if (node === 'snk') return path;
-      for (const edge of adj[node]) {
-        if (!visited.has(edge.to)) {
-          visited.add(edge.to);
-          queue.push({ node: edge.to, path: [...path, edge.pipe] });
-        }
+      if (node === toId) return path;
+      for (const p of pipes) {
+        let next = null;
+        if (p.from === node) next = p.to;
+        else if (p.to === node) next = p.from; // bidirectional? no — directed only
+        if (p.from !== node) continue;
+        next = p.to;
+        if (visited.has(next)) continue;
+        const nNode = nodeById(next);
+        if (!nNode) continue;
+        if (nNode.kind === 'router' && !nNode.open) continue;
+        visited.add(next);
+        queue.push({ node: next, path: [...path, p.id] });
       }
     }
     return null;
   }
 
-  let currentRoute = findRoute();
-
-  // ── Spawn ──────────────────────────────────────────────────────────────────
-  function spawnBlob() {
-    if (!currentRoute || currentRoute.length === 0) return;
-    blobs.push({
-      pipeIndex: currentRoute[0],
-      routePos: 0,          // index into currentRoute
-      route: [...currentRoute],
-      t: 0,
-      wobble: 0,
-      stuck: false,
+  // Pick one active zone to target (least-filled reachable zone)
+  function pickTarget() {
+    const reachable = ZONE_IDS.filter(zid => {
+      if (zoneFill[zid] >= ZONE_NEED) return false;
+      return bfsPath('src', zid) !== null;
     });
+    if (!reachable.length) return null;
+    reachable.sort((a, b) => zoneFill[a] - zoneFill[b]);
+    return reachable[0];
   }
 
-  // ── Particles ──────────────────────────────────────────────────────────────
-  function addSparkle(x, y) {
-    for (let i = 0; i < 4; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 30 + Math.random() * 50;
+  function spawnBlob() {
+    const target = pickTarget();
+    if (!target) return;
+    const route = bfsPath('src', target);
+    if (!route || !route.length) return;
+    blobs.push({ route, routePos: 0, pipeId: route[0], t: 0, target, stuck: false, wobble: 0 });
+  }
+
+  function getPipe(id) { return pipes.find(p => p.id === id); }
+
+  // ── Particles ─────────────────────────────────────────────────────────────
+  function sparkle(x, y, color = null) {
+    for (let i = 0; i < 5; i++) {
+      const a = Math.random() * Math.PI * 2, s = 30 + Math.random() * 60;
       particles.push({
-        x, y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        life: 1, maxLife: 0.5 + Math.random() * 0.3,
+        x, y, vx: Math.cos(a)*s, vy: Math.sin(a)*s,
+        life: 1, decay: 1.8 + Math.random(),
         r: 2 + Math.random() * 3,
-        color: `hsl(${180 + Math.random() * 60},100%,${70 + Math.random() * 30}%)`,
+        color: color || `hsl(${180+Math.random()*60},100%,${60+Math.random()*30}%)`,
       });
     }
   }
 
-  function addFloater(x, y, emoji) {
-    floaters.push({ x, y, vy: -60, life: 1, emoji });
+  function floatText(x, y, txt) {
+    floaters.push({ x, y, vy: -55, life: 1, txt });
   }
 
-  // ── World coords ───────────────────────────────────────────────────────────
-  function nodePos(id) {
-    const n = nodeById(id);
-    return { x: n.fx * W(), y: n.fy * H() };
-  }
-
-  function pipeMidpoint(pipe) {
-    const a = nodePos(pipe.from);
-    const b = nodePos(pipe.to);
-    return { x: (a.x + b.x) * 0.5, y: (a.y + b.y) * 0.5 };
-  }
-
-  function blobWorldPos(blob) {
-    const pipe = pipes[blob.pipeIndex];
-    const a = nodePos(pipe.from);
-    const b = nodePos(pipe.to);
-    return {
-      x: a.x + (b.x - a.x) * blob.t,
-      y: a.y + (b.y - a.y) * blob.t,
-    };
-  }
-
-  // ── Click handling ─────────────────────────────────────────────────────────
-  function onCanvasClick(e) {
-    if (ended) return;
-    const { x: cx, y: cy } = canvasXY(e);
-
-    // Check gate nodes (excluding src and snk)
-    for (const n of nodes) {
-      if (!n.gate) continue;
-      const np = nodePos(n.id);
-      const dx = cx - np.x, dy = cy - np.y;
-      if (dx * dx + dy * dy < 30 * 30) {
-        n.open = !n.open;
-        currentRoute = findRoute();
-        // Reroute any blob that's in a now-closed pipe
-        blobs.forEach(b => rerouteBlob(b));
-        sfx.click();
-        return;
-      }
-    }
-
-    // Check pipe click for upgrade
-    for (const pipe of pipes) {
-      const a = nodePos(pipe.from);
-      const b = nodePos(pipe.to);
-      // Distance from click to segment
-      const dx = b.x - a.x, dy = b.y - a.y;
-      const len2 = dx * dx + dy * dy;
-      const t = Math.max(0, Math.min(1, ((cx - a.x) * dx + (cy - a.y) * dy) / len2));
-      const px = a.x + t * dx - cx;
-      const py = a.y + t * dy - cy;
-      if (px * px + py * py < 18 * 18) {
-        if (pipe.cap < 3 && budget >= UPGRADE_COST) {
-          pipe.cap += 1;
-          budget -= UPGRADE_COST;
-          pipe.upgFlash = 0.5;
-          const mid = pipeMidpoint(pipe);
-          addSparkle(mid.x, mid.y);
-          addSparkle(mid.x, mid.y);
-          sfx.coin();
-        } else if (pipe.cap >= 3) {
-          addFloater(cx, cy - 20, '🔒');
-        } else {
-          addFloater(cx, cy - 20, '😤');
-          sfx.block();
-        }
-        return;
-      }
-    }
-  }
-
-  canvas.addEventListener('click', onCanvasClick);
-
-  function rerouteBlob(blob) {
-    const newRoute = findRoute();
-    if (!newRoute) return;
-    // If the blob is on a pipe that's still accessible, keep it; otherwise reroute from current node
-    const pipe = pipes[blob.pipeIndex];
-    const nodeId = blob.t < 0.5 ? pipe.from : pipe.to;
-    // BFS from that node
-    const partial = bfsFrom(nodeId);
-    if (partial) {
-      blob.route = partial;
-      blob.routePos = 0;
-      blob.pipeIndex = partial[0];
-      blob.t = 0;
-    }
-  }
-
-  function bfsFrom(startId) {
-    const adj = {};
-    nodes.forEach(n => { adj[n.id] = []; });
-    pipes.forEach((p, i) => {
-      const fromN = nodeById(p.from);
-      const toN   = nodeById(p.to);
-      if (fromN && toN && (fromN.id === 'src' || fromN.open) && (toN.id === 'snk' || toN.open)) {
-        adj[p.from].push({ to: p.to, pipe: i });
-      }
-    });
-    const visited = new Set([startId]);
-    const queue = [{ node: startId, path: [] }];
-    while (queue.length) {
-      const { node, path } = queue.shift();
-      if (node === 'snk') return path.length ? path : null;
-      for (const edge of adj[node]) {
-        if (!visited.has(edge.to)) {
-          visited.add(edge.to);
-          queue.push({ node: edge.to, path: [...path, edge.pipe] });
-        }
-      }
-    }
-    return null;
-  }
-
-  // ── Update ─────────────────────────────────────────────────────────────────
+  // ── Update ────────────────────────────────────────────────────────────────
   function update(dt) {
     gameTime += dt;
-    surgeActive = gameTime >= SURGE_START && gameTime <= SURGE_START + SURGE_DUR;
-    const spawnInterval = surgeActive ? BASE_SPAWN * 0.5 : BASE_SPAWN;
+    surgeActive = gameTime >= SURGE_AT && gameTime < SURGE_AT + SURGE_DUR;
+    const interval = surgeActive ? BASE_SPAWN * 0.45 : BASE_SPAWN;
 
-    // Spawn blobs
     spawnTimer += dt;
-    while (spawnTimer >= spawnInterval) {
-      spawnTimer -= spawnInterval;
-      spawnBlob();
-    }
+    while (spawnTimer >= interval) { spawnTimer -= interval; spawnBlob(); }
 
-    // Count load per pipe
+    // load count
     pipes.forEach(p => { p.load = 0; });
-    blobs.forEach(b => { pipes[b.pipeIndex].load++; });
+    blobs.forEach(b => { const p = getPipe(b.pipeId); if (p) p.load++; });
 
-    // Update blobs
+    // move blobs
     blobs = blobs.filter(blob => {
-      const pipe = pipes[blob.pipeIndex];
+      const pipe = getPipe(blob.pipeId);
+      if (!pipe) return false;
       const congested = pipe.load > pipe.cap;
       blob.stuck = congested;
-      const speed = congested ? BLOB_SPEED * BLOB_SLOW : BLOB_SPEED;
-      blob.wobble = congested ? blob.wobble + dt * 8 : 0;
-
-      // Compute pipe length in world coords for speed normalisation
-      const a = nodePos(pipe.from);
-      const b = nodePos(pipe.to);
+      blob.wobble = congested ? blob.wobble + dt * 9 : 0;
+      const a = nodePos(pipe.from), b = nodePos(pipe.to);
       const len = Math.hypot(b.x - a.x, b.y - a.y);
-      // speed is in "pipe-lengths per second" normalised to 200px baseline
-      const normSpeed = speed * (200 / Math.max(len, 1));
-      blob.t += normSpeed * dt;
-
+      const speed = (congested ? BLOB_SPEED * 0.28 : BLOB_SPEED) * (200 / Math.max(len, 1));
+      blob.t += speed * dt;
       if (blob.t >= 1) {
-        // Advance to next pipe in route
         blob.routePos++;
         if (blob.routePos >= blob.route.length) {
-          // Reached sink
+          // arrived at zone
+          zoneFill[blob.target] = Math.min(ZONE_NEED, (zoneFill[blob.target] || 0) + 1);
           delivered++;
-          const snkPos = nodePos('snk');
-          addSparkle(snkPos.x, snkPos.y);
-          if (delivered % 5 === 0) addFloater(snkPos.x, snkPos.y - 20, '💧✨');
-          sfx.pop();
-          return false; // remove blob
+          const zPos = nodePos(blob.target);
+          sparkle(zPos.x, zPos.y, '#44ffcc');
+          if (zoneFill[blob.target] === ZONE_NEED) {
+            floatText(zPos.x, zPos.y - 30, '✅ Full!');
+            sfx.win();
+          } else {
+            sfx.pop();
+          }
+          return false;
         }
-        blob.pipeIndex = blob.route[blob.routePos];
+        blob.pipeId = blob.route[blob.routePos];
         blob.t = 0;
       }
       return true;
     });
 
-    // Upgrade flash timers
-    pipes.forEach(p => { if (p.upgFlash > 0) p.upgFlash = Math.max(0, p.upgFlash - dt); });
+    pipes.forEach(p => { if (p.upgFlash > 0) p.upgFlash -= dt; });
 
-    // Particles
     particles = particles.filter(p => {
-      p.x += p.vx * dt; p.y += p.vy * dt;
-      p.vy += 60 * dt; // gravity
-      p.life -= dt / p.maxLife;
+      p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 80 * dt;
+      p.life -= p.decay * dt;
       return p.life > 0;
     });
+    floaters = floaters.filter(f => { f.y += f.vy * dt; f.life -= 1.4 * dt; return f.life > 0; });
 
-    // Floaters
-    floaters = floaters.filter(f => {
-      f.y += f.vy * dt;
-      f.life -= dt * 1.5;
-      return f.life > 0;
-    });
-
-    // Sparkle on smooth pipes
-    pipes.forEach(pipe => {
-      if (pipe.load <= pipe.cap && pipe.load > 0 && Math.random() < dt * 3) {
-        const mid = pipeMidpoint(pipe);
+    // congestion warning
+    pipes.forEach(p => {
+      if (p.load > p.cap && Math.random() < dt * 2) {
+        const m = pipeMid(p);
+        floatText(m.x + (Math.random()-0.5)*30, m.y - 10, '🔴');
+      }
+      if (p.load > 0 && p.load <= p.cap && Math.random() < dt * 2) {
+        const m = pipeMid(p);
+        const a = nodePos(p.from), b = nodePos(p.to);
         const t2 = Math.random();
-        const a = nodePos(pipe.from), b = nodePos(pipe.to);
-        addSparkle(a.x + (b.x - a.x) * t2, a.y + (b.y - a.y) * t2);
+        sparkle(a.x+(b.x-a.x)*t2, a.y+(b.y-a.y)*t2);
       }
     });
 
-    // Congestion feedback
-    pipes.forEach(pipe => {
-      if (pipe.load > pipe.cap && Math.random() < dt * 1.5) {
-        const mid = pipeMidpoint(pipe);
-        addFloater(mid.x + (Math.random() - 0.5) * 40, mid.y - 10, '😤');
-      }
-    });
+    // hint after 8s if nothing flowing
+    if (!hintShown && gameTime > 8 && delivered === 0) {
+      hintShown = true;
+      floatText(W() * 0.4, H() * 0.4, '👆 Tap routers to open!');
+    }
 
-    // Timer
     if (gameTime >= TOTAL_TIME && !ended) endGame();
   }
 
-  // ── Draw ───────────────────────────────────────────────────────────────────
+  // ── Draw ──────────────────────────────────────────────────────────────────
   function draw() {
     const ctx = getCtx();
     const w = W(), h = H();
 
     // Background
-    ctx.fillStyle = '#001a2e';
+    const bg = ctx.createLinearGradient(0, 0, 0, h);
+    bg.addColorStop(0, '#001828');
+    bg.addColorStop(1, '#002a3a');
+    ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
 
-    // Pool wave lines
-    ctx.strokeStyle = '#002a45';
+    // Subtle wave lines
+    ctx.strokeStyle = 'rgba(0,100,180,0.15)';
     ctx.lineWidth = 1;
-    for (let y = 80; y < h; y += 40) {
+    for (let y = 0; y < h; y += 35) {
       ctx.beginPath();
       ctx.moveTo(0, y);
-      for (let x = 0; x <= w; x += 60) {
-        ctx.quadraticCurveTo(x + 15, y - 6, x + 30, y);
-        ctx.quadraticCurveTo(x + 45, y + 6, x + 60, y);
+      for (let x = 0; x <= w; x += 50) {
+        ctx.quadraticCurveTo(x+12, y-5, x+25, y);
+        ctx.quadraticCurveTo(x+37, y+5, x+50, y);
       }
       ctx.stroke();
     }
 
-    // Draw pipes
+    // ── Pipes ──────────────────────────────────────────────────────────────
     pipes.forEach(pipe => {
-      const a = nodePos(pipe.from);
-      const b = nodePos(pipe.to);
+      const a = nodePos(pipe.from), b = nodePos(pipe.to);
       const congested = pipe.load > pipe.cap;
-      const baseWidth = 8 + (pipe.cap - 1) * 6; // 8, 14, 20 for cap 1,2,3
+      const baseW = 6 + (pipe.cap - 1) * 4;
 
-      // Shadow
-      ctx.strokeStyle = 'rgba(0,0,0,0.4)';
-      ctx.lineWidth = baseWidth + 4;
       ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(a.x, a.y);
-      ctx.lineTo(b.x, b.y);
-      ctx.stroke();
 
-      // Main pipe body
+      // shadow
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+      ctx.lineWidth = baseW + 4;
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+
+      // body
       if (pipe.upgFlash > 0) {
-        const f = pipe.upgFlash * 2;
-        ctx.strokeStyle = `rgba(255,255,255,${f})`;
+        ctx.strokeStyle = `rgba(255,255,255,${pipe.upgFlash * 3})`;
       } else if (congested) {
-        const pulse = 0.7 + 0.3 * Math.sin(gameTime * 10);
-        ctx.strokeStyle = `rgba(255,${Math.floor(60 * pulse)},${Math.floor(30 * pulse)},1)`;
+        ctx.strokeStyle = `hsl(${10 + Math.sin(gameTime*8)*10},100%,50%)`;
+      } else if (pipe.load > 0) {
+        ctx.strokeStyle = '#00ccff';
       } else {
-        ctx.strokeStyle = '#00aaff';
+        ctx.strokeStyle = '#003a55';
       }
-      ctx.lineWidth = baseWidth;
-      ctx.beginPath();
-      ctx.moveTo(a.x, a.y);
-      ctx.lineTo(b.x, b.y);
-      ctx.stroke();
+      ctx.lineWidth = baseW;
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
 
-      // Inner highlight
-      ctx.strokeStyle = congested ? 'rgba(255,180,180,0.4)' : 'rgba(68,204,255,0.5)';
-      ctx.lineWidth = Math.max(2, baseWidth * 0.35);
-      ctx.beginPath();
-      // offset toward top-left for highlight
-      const nx = -(b.y - a.y) / Math.hypot(b.x - a.x, b.y - a.y) * (baseWidth * 0.2);
-      const ny =  (b.x - a.x) / Math.hypot(b.x - a.x, b.y - a.y) * (baseWidth * 0.2);
-      ctx.moveTo(a.x + nx, a.y + ny);
-      ctx.lineTo(b.x + nx, b.y + ny);
-      ctx.stroke();
+      // inner shine
+      if (!congested && pipe.load > 0) {
+        ctx.strokeStyle = 'rgba(140,240,255,0.4)';
+        ctx.lineWidth = Math.max(2, baseW * 0.3);
+        const len = Math.hypot(b.x-a.x, b.y-a.y);
+        const nx = -(b.y-a.y)/len * baseW * 0.18, ny = (b.x-a.x)/len * baseW * 0.18;
+        ctx.beginPath(); ctx.moveTo(a.x+nx, a.y+ny); ctx.lineTo(b.x+nx, b.y+ny); ctx.stroke();
+      }
 
-      // Capacity label
-      const mid = pipeMidpoint(pipe);
-      ctx.fillStyle = 'rgba(0,170,255,0.9)';
-      ctx.font = 'bold 11px monospace';
+      // capacity dots on pipe
+      const mid = pipeMid(pipe);
+      ctx.fillStyle = congested ? '#ff6633' : 'rgba(0,200,255,0.8)';
+      ctx.font = 'bold 10px monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      const capStr = pipe.cap === 1 ? '●' : pipe.cap === 2 ? '●●' : '●●●';
-      ctx.fillText(capStr, mid.x, mid.y - baseWidth * 0.7 - 4);
+      const dots = '●'.repeat(pipe.cap);
+      ctx.fillText(dots, mid.x, mid.y - baseW * 0.65 - 3);
     });
 
-    // Draw blobs
+    // ── Blobs ──────────────────────────────────────────────────────────────
     blobs.forEach(blob => {
-      const pos = blobWorldPos(blob);
-      const congested = pipes[blob.pipeIndex].load > pipes[blob.pipeIndex].cap;
-      const wobX = blob.stuck ? Math.sin(blob.wobble) * 5 : 0;
+      const pipe = getPipe(blob.pipeId);
+      if (!pipe) return;
+      const a = nodePos(pipe.from), b = nodePos(pipe.to);
+      const x = a.x + (b.x-a.x)*blob.t + (blob.stuck ? Math.sin(blob.wobble)*4 : 0);
+      const y = a.y + (b.y-a.y)*blob.t;
+      const cong = pipe.load > pipe.cap;
 
-      // Speed trail (smooth only)
-      if (!congested) {
-        const pipe = pipes[blob.pipeIndex];
-        const a = nodePos(pipe.from), b = nodePos(pipe.to);
-        const dx = b.x - a.x, dy = b.y - a.y;
-        const len = Math.hypot(dx, dy);
-        const tx = dx / len, ty = dy / len;
-        for (let i = 1; i <= 3; i++) {
+      // trail
+      if (!cong) {
+        const dx = b.x-a.x, dy = b.y-a.y, len = Math.hypot(dx,dy)||1;
+        const tx = dx/len, ty = dy/len;
+        for (let i = 1; i <= 4; i++) {
           ctx.beginPath();
-          ctx.arc(pos.x + wobX - tx * i * 5, pos.y - ty * i * 5, 8 - i * 2, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(0,170,255,${0.12 - i * 0.03})`;
+          ctx.arc(x - tx*i*4, y - ty*i*4, 7-i*1.4, 0, Math.PI*2);
+          ctx.fillStyle = `rgba(0,180,255,${0.12-i*0.025})`;
           ctx.fill();
         }
       }
 
-      // Blob body
-      const grad = ctx.createRadialGradient(pos.x + wobX - 2, pos.y - 2, 1, pos.x + wobX, pos.y, 8);
-      if (congested) {
-        grad.addColorStop(0, 'rgba(255,200,100,0.95)');
-        grad.addColorStop(1, 'rgba(255,100,50,0.7)');
-      } else {
-        grad.addColorStop(0, 'rgba(120,240,255,0.95)');
-        grad.addColorStop(1, 'rgba(0,140,255,0.65)');
-      }
+      // body
+      const g = ctx.createRadialGradient(x-2, y-2, 1, x, y, 9);
+      g.addColorStop(0, cong ? 'rgba(255,200,80,1)' : 'rgba(150,245,255,1)');
+      g.addColorStop(1, cong ? 'rgba(255,80,30,0.7)' : 'rgba(0,150,255,0.6)');
       ctx.beginPath();
-      ctx.arc(pos.x + wobX, pos.y, 8, 0, Math.PI * 2);
-      ctx.fillStyle = grad;
+      ctx.arc(x, y, 9, 0, Math.PI*2);
+      ctx.fillStyle = g;
       ctx.fill();
 
-      // Stuck fish
-      if (blob.stuck) {
-        ctx.font = '12px serif';
+      if (cong) {
+        ctx.font = '10px serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('🐟', pos.x + wobX, pos.y);
+        ctx.fillText('🐟', x, y);
       }
     });
 
-    // Draw particles
+    // ── Nodes ──────────────────────────────────────────────────────────────
+    nodes.forEach(n => {
+      const pos = nodePos(n.id);
+      const isRouter = n.kind === 'router';
+      const closed = isRouter && !n.open;
+
+      // zone fill arc
+      if (n.kind === 'zone') {
+        const fill = zoneFill[n.id] / ZONE_NEED;
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, 28, -Math.PI/2, -Math.PI/2 + fill * Math.PI * 2);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.fillStyle = fill >= 1 ? 'rgba(0,255,180,0.3)' : 'rgba(0,150,255,0.2)';
+        ctx.fill();
+      }
+
+      // outer ring
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, n.kind === 'zone' ? 28 : 22, 0, Math.PI*2);
+      const bg2 =
+        n.kind === 'src'    ? '#004488' :
+        n.kind === 'zone'   ? (zoneFill[n.id] >= ZONE_NEED ? '#004422' : '#002244') :
+        closed              ? '#222233' : '#003366';
+      ctx.fillStyle = bg2;
+      ctx.fill();
+
+      const stroke =
+        n.kind === 'src'  ? '#44aaff' :
+        n.kind === 'zone' ? (zoneFill[n.id] >= ZONE_NEED ? '#00ff88' : '#44ccff') :
+        closed            ? '#445566' : '#44ccff';
+      ctx.strokeStyle = stroke;
+      ctx.lineWidth = n.kind === 'zone' ? 3 : 2;
+      ctx.stroke();
+
+      // glow on open routers with flow
+      if (isRouter && n.open) {
+        ctx.save();
+        ctx.shadowColor = '#44ccff';
+        ctx.shadowBlur = 12;
+        ctx.beginPath(); ctx.arc(pos.x, pos.y, 22, 0, Math.PI*2);
+        ctx.strokeStyle = '#44ccff88'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.restore();
+      }
+
+      // icon / label
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      if (n.kind === 'src' || n.kind === 'zone') {
+        ctx.font = '20px serif';
+        ctx.fillText(n.label, pos.x, pos.y);
+      } else if (closed) {
+        ctx.font = 'bold 16px monospace';
+        ctx.fillStyle = '#667';
+        ctx.fillText('✕', pos.x, pos.y);
+      } else {
+        ctx.font = 'bold 11px monospace';
+        ctx.fillStyle = '#44ccff';
+        ctx.fillText(n.label, pos.x, pos.y);
+      }
+
+      // zone name + fill bar
+      if (n.kind === 'zone') {
+        ctx.font = 'bold 10px monospace';
+        ctx.fillStyle = '#8ab';
+        ctx.textAlign = 'center';
+        ctx.fillText(n.name, pos.x, pos.y + 40);
+        // fill bar
+        const bw = 50, bh = 6, bx = pos.x - bw/2, by = pos.y + 46;
+        ctx.fillStyle = '#002244';
+        ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 3); ctx.fill();
+        const ratio = Math.min(1, zoneFill[n.id] / ZONE_NEED);
+        ctx.fillStyle = ratio >= 1 ? '#00ff88' : '#00aaff';
+        ctx.beginPath(); ctx.roundRect(bx, by, bw * ratio, bh, 3); ctx.fill();
+      }
+    });
+
+    // ── Particles / floaters ───────────────────────────────────────────────
     particles.forEach(p => {
       ctx.save();
       ctx.globalAlpha = Math.max(0, p.life);
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = p.color;
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = p.color; ctx.fill();
       ctx.restore();
     });
-
-    // Floaters
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
     floaters.forEach(f => {
       ctx.save();
       ctx.globalAlpha = Math.max(0, f.life);
-      ctx.font = '20px serif';
-      ctx.fillText(f.emoji, f.x, f.y);
+      ctx.font = '14px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fff';
+      ctx.fillText(f.txt, f.x, f.y);
       ctx.restore();
     });
 
-    // Draw nodes
-    nodes.forEach(n => {
-      const pos = nodePos(n.id);
-      const isGate = n.gate;
-      const closed = isGate && !n.open;
+    // ── HUD ────────────────────────────────────────────────────────────────
+    const rem = Math.max(0, Math.ceil(TOTAL_TIME - gameTime));
+    const filled = ZONE_IDS.filter(z => zoneFill[z] >= ZONE_NEED).length;
+    hud.setLeft(`<span style="cursor:pointer" id="m2back">◀</span>`);
+    hud.setCenter(surgeActive
+      ? `<span style="color:#ff6644">🌊 SURGE WAVE!</span> &nbsp; ⏱ ${rem}s`
+      : `⏱ ${rem}s`);
+    hud.setRight(`✅ ${filled}/4 zones &nbsp; 💧 ${delivered}`);
 
-      // Node circle
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, 22, 0, Math.PI * 2);
-      ctx.fillStyle = closed ? '#334' : (n.id === 'src' ? '#0066aa' : n.id === 'snk' ? '#006644' : '#004488');
-      ctx.fill();
-      ctx.strokeStyle = closed ? '#556' : '#44ccff';
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-
-      // Emoji label
-      ctx.font = '22px serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      if (n.id === 'src') {
-        ctx.fillText('🏊', pos.x, pos.y);
-      } else if (n.id === 'snk') {
-        ctx.fillText('🌊', pos.x, pos.y);
-      } else if (closed) {
-        ctx.font = 'bold 16px monospace';
-        ctx.fillStyle = '#aaa';
-        ctx.fillText('✕', pos.x, pos.y);
-      } else {
-        // draw open gate
-        ctx.font = '14px serif';
-        ctx.fillText('💧', pos.x, pos.y);
-      }
-    });
-
-    // HUD
-    const remaining = Math.max(0, Math.ceil(TOTAL_TIME - gameTime));
-    hud.setLeft(`<span style="cursor:pointer;font-size:18px" id="m2-back">◀</span>`);
-    hud.setCenter(
-      `${surgeActive ? '<span style="color:#ff6644">🌊 SURGE!</span> ' : ''}⏱ ${remaining}s`
-    );
-    hud.setRight(`💧 ${delivered} &nbsp; 🪙 ${budget}`);
-
-    // Ensure back button click
-    const backEl = root.querySelector('#m2-back');
-    if (backEl && !backEl._bound) {
-      backEl._bound = true;
-      backEl.addEventListener('click', () => { cleanup(); onComplete(0, 0); });
-    }
+    const back = root.querySelector('#m2back');
+    if (back && !back._b) { back._b = true; back.addEventListener('click', () => { cleanup(); onComplete(0,0); }); }
   }
 
-  // ── End game ───────────────────────────────────────────────────────────────
+  // ── End ───────────────────────────────────────────────────────────────────
   function endGame() {
     if (ended) return;
     ended = true;
     cancelAnimationFrame(rafId);
-
-    let stars = 0;
-    if (delivered >= GOAL_1) stars = 1;
-    if (delivered >= GOAL_2) stars = 2;
-    if (delivered >= GOAL_2 && budget >= 40) stars = 3;
-
-    const coins = COINS_WIN[stars];
-    if (stars >= 2) sfx.win(); else sfx.fail();
-
-    const lines = [
-      `💧 Delivered: ${delivered}`,
-      `🪙 Budget left: ${budget}`,
-      ``,
-      `💡 You discovered <b>load balancing</b>!`,
-      `Real internet routers do exactly this — spreading`,
-      `traffic across paths to prevent congestion.`,
-    ];
-
+    const filled = ZONE_IDS.filter(z => zoneFill[z] >= ZONE_NEED).length;
+    const stars = filled >= 4 ? 3 : filled >= 2 ? 2 : filled >= 1 ? 1 : 0;
+    const coins = [0, 25, 50, 80][stars];
+    stars >= 2 ? sfx.win() : sfx.fail();
     showStarResult(root, {
-      stars,
-      title: stars === 3 ? 'Flawless Flow!' : stars === 2 ? 'Great Manager!' : stars === 1 ? 'Decent Flow' : 'Jam Packed!',
-      lines,
+      stars, color: '#44ccff',
+      title: ['No Flow 😢','Partial Flow 🌊','Good Routing! 💧','Master Router! 🏆'][stars],
+      lines: [
+        `Zones filled: ${filled}/4`,
+        `Packets delivered: ${delivered}`,
+        `💡 You just practiced <b>load balancing</b>!`,
+        `Real routers split traffic across paths to prevent congestion.`,
+      ],
       coins,
-      color: '#44ccff',
-      onContinue: (s) => { cleanup(); onComplete(stars, coins); },
+      onContinue: s => { cleanup(); onComplete(stars, coins); },
     });
   }
 
-  // ── Game loop ──────────────────────────────────────────────────────────────
-  let rafId;
+  // ── Loop ──────────────────────────────────────────────────────────────────
   function loop(now) {
     if (ended) return;
     if (lastNow === null) lastNow = now;
@@ -560,24 +473,51 @@ export function launch(app, state, onComplete) {
     rafId = requestAnimationFrame(loop);
   }
 
+  // ── Click ─────────────────────────────────────────────────────────────────
+  function onClick(e) {
+    if (ended) return;
+    const { x: cx, y: cy } = canvasXY(e);
+    // Toggle router nodes
+    for (const n of nodes) {
+      if (n.kind !== 'router') continue;
+      const p = nodePos(n.id);
+      if (Math.hypot(cx-p.x, cy-p.y) < 26) {
+        n.open = !n.open;
+        sfx.click();
+        // kill blobs now blocked
+        blobs = blobs.filter(b => {
+          const pipe = getPipe(b.pipeId);
+          if (!pipe) return false;
+          const toN = nodeById(pipe.to);
+          if (toN && toN.kind === 'router' && !toN.open) return false;
+          return true;
+        });
+        return;
+      }
+    }
+  }
+  canvas.addEventListener('click', onClick);
+  canvas.addEventListener('touchend', e => { e.preventDefault(); onClick(e); }, { passive: false });
+
   function cleanup() {
     cancelAnimationFrame(rafId);
-    canvas.removeEventListener('click', onCanvasClick);
+    canvas.removeEventListener('click', onClick);
     destroy();
   }
 
+  // ── Lesson + intro ────────────────────────────────────────────────────────
   showLessonBanner(root, {
-    concept: 'Packet Routing & Bandwidth',
-    detail: 'Data flows like water — it follows open paths and stops at congested links. Gates = routers.',
-    color: '#00b4ff',
+    concept: 'Packet Routing & Load Balancing',
+    detail: 'Routers decide which path data takes. Opening multiple paths spreads load and prevents congestion.',
+    color: '#44ccff',
   });
 
   showIntro(root, {
     emoji: '💧',
-    title: 'Water Park',
-    concept: 'Networks route data through pipes. Bandwidth limits flow. Open the right gates to reach every zone!',
-    howto: 'Tap nodes to toggle gates open/closed. Route water from the source to all destinations.',
-    color: '#00b4ff',
+    title: 'Water Park Router',
+    concept: 'Routers direct data packets to their destination. Too many packets on one path causes congestion — spread the load!',
+    howto: 'Tap routers (R1–R6) to open them. Water flows from 💦 to all 4 zones. Fill every zone bar to win! Surge waves hit at 20s.',
+    color: '#44ccff',
     onStart: () => { rafId = requestAnimationFrame(loop); },
   });
 }
