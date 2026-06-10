@@ -9,6 +9,15 @@
 </head>
 <body>
   <div id="app"></div>
+  <script>
+    // Unregister any old service workers so stale V1 cache doesn't block V2
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(r => r.unregister());
+      });
+      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+    }
+  </script>
   <script type="module" src="src/v2/main.js"></script>
 </body>
 </html>
