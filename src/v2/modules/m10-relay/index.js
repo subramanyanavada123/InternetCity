@@ -1,4 +1,4 @@
-import { makeGameShell, makeHUD, showStarResult } from '../../shared/ui.js';
+import { makeGameShell, makeHUD, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
 
 const LANE_COLORS = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db','#9b59b6'];
@@ -28,7 +28,7 @@ function rrect(c, x, y, w, h, r) {
 
 export function launch(app, state, onComplete) {
   const shell = makeGameShell(app, { bgColor:'#001a1a' });
-  const { root, canvas, ctx, W, H, destroy } = shell;
+  const { root, canvas, ctx, W, H, destroy, canvasXY } = shell;
   const hud = makeHUD(root, { color:'#46f0c0' });
 
   const backBtn = document.createElement('button');
@@ -250,6 +250,21 @@ export function launch(app, state, onComplete) {
 
   function cleanup() { if(raf) cancelAnimationFrame(raf); raf=null; destroy(); }
 
-  hud.setCenter('⏱ 15s  —  PACKET RACE');
-  raf = requestAnimationFrame(raceLoop);
+  showLessonBanner(root, {
+    concept: 'Packet Fragmentation & Reassembly',
+    detail: 'Large messages split into packets, travel different paths, then reassemble in order at the destination — that\'s TCP/IP.',
+    color: '#00cec9',
+  });
+
+  showIntro(root, {
+    emoji: '🏃',
+    title: 'Relay Race',
+    concept: 'TCP breaks data into numbered packets that travel independently and reassemble in order. One lost packet and the whole message fails!',
+    howto: 'Race to collect all packet fragments, then arrange them in the correct numbered order to reassemble the message.',
+    color: '#00cec9',
+    onStart: () => {
+      hud.setCenter('⏱ 15s  —  PACKET RACE');
+      raf = requestAnimationFrame(raceLoop);
+    },
+  });
 }

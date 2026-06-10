@@ -1,4 +1,4 @@
-import { makeGameShell, makeHUD, showStarResult } from '../../shared/ui.js';
+import { makeGameShell, makeHUD, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
 
 const ITEMS = ['🍎','🥐','🧃','🍕','🧁','🥤','🍜','🥗','🍦','🧀','🥨','🍩'];
@@ -13,7 +13,7 @@ function float(root,x,y,text,col='#ffd700'){
 
 export function launch(app, state, onComplete) {
   const shell = makeGameShell(app, { bgColor: '#1a0f00' });
-  const { root, canvas, ctx, W, H, destroy } = shell;
+  const { root, canvas, ctx, W, H, destroy, canvasXY } = shell;
   const hud = makeHUD(root, { color: '#ffd700' });
 
   const backBtn = document.createElement('button');
@@ -86,10 +86,7 @@ export function launch(app, state, onComplete) {
   }
 
   // ── Input ──────────────────────────────────────────────────────────────────
-  function getPos(e){
-    const r=canvas.getBoundingClientRect(),p=e.touches?e.touches[0]:e;
-    return {x:p.clientX-r.left,y:p.clientY-r.top};
-  }
+  function getPos(e){ return canvasXY(e); }
   function onClick(e){
     if(gameOver) return;
     const {x,y}=getPos(e); const l=lo();
@@ -245,7 +242,20 @@ export function launch(app, state, onComplete) {
     drawAll(ts);
   }
 
-  raf=requestAnimationFrame(loop);
+  showLessonBanner(root, {
+    concept: 'CPU Cache & LRU Eviction',
+    detail: 'Caches store frequently used data close to the CPU. When full, the Least Recently Used item is evicted.',
+    color: '#fd79a8',
+  });
+
+  showIntro(root, {
+    emoji: '🧠',
+    title: 'Memory Palace',
+    concept: 'Caches make computers fast — but they\'re small! When full, the LRU (Least Recently Used) item is removed to make space.',
+    howto: 'Customers request items. Tap the storeroom to fetch them into cache. Keep popular items cached!',
+    color: '#fd79a8',
+    onStart: () => { raf=requestAnimationFrame(loop); },
+  });
 
   function cleanup(){
     if(raf) cancelAnimationFrame(raf);

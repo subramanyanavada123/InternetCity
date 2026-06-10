@@ -1,4 +1,4 @@
-import { makeGameShell, makeHUD, showStarResult } from '../../shared/ui.js';
+import { makeGameShell, makeHUD, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
 
 const CONTINENTS = [
@@ -32,7 +32,7 @@ const BG_STARS = Array.from({length:180}, () => ({
 
 export function launch(app, state, onComplete) {
   const shell = makeGameShell(app, { bgColor: '#05050f' });
-  const { root, canvas, ctx, W, H, destroy } = shell;
+  const { root, canvas, ctx, W, H, destroy, canvasXY } = shell;
   const hud = makeHUD(root, { color: '#a29bfe' });
 
   const backBtn = document.createElement('button');
@@ -113,8 +113,7 @@ export function launch(app, state, onComplete) {
   canvas.style.cursor = 'crosshair';
   function onCanvasClick(e) {
     if (phase !== 'routing' && phase !== 'setup') return;
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    const { x: mx, y: my } = canvasXY(e);
     for (let i = 0; i < CITIES.length; i++) {
       if (Math.hypot(mx - cityX(i), my - cityY(i)) < 26) { handleCityClick(i); sfx.click(); return; }
     }
@@ -274,7 +273,22 @@ export function launch(app, state, onComplete) {
     destroy();
   }
 
-  initRound();
-  last = performance.now();
-  raf = requestAnimationFrame(loop);
+  showLessonBanner(root, {
+    concept: 'Latency & Propagation Delay',
+    detail: 'Signal speed is limited by physics. Longer cables = more delay. Routing via closer nodes reduces latency.',
+    color: '#a29bfe',
+  });
+
+  showIntro(root, {
+    emoji: '⏱️',
+    title: 'Time Traveler',
+    concept: 'Latency is the time data takes to travel. Distance matters! Routing through nearby servers reduces delay.',
+    howto: 'Select cities to route your signal. Avoid long hops — the shorter your path, the lower the latency!',
+    color: '#a29bfe',
+    onStart: () => {
+      initRound();
+      last = performance.now();
+      raf = requestAnimationFrame(loop);
+    },
+  });
 }

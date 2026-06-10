@@ -1,4 +1,4 @@
-import { makeHUD, makeCard, showStarResult } from '../../shared/ui.js';
+import { makeHUD, makeCard, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
 
 const LAYERS = [
@@ -327,6 +327,21 @@ export function launch(app, state, onComplete) {
     }
   }
 
-  hud.setLeft('🏗️ Tower of Babel');
-  round1();
+  showLessonBanner(root, {
+    concept: 'OSI 7-Layer Model',
+    detail: 'Every network message travels through 7 layers — Physical → Data Link → Network → Transport → Session → Presentation → Application.',
+    color: '#ff9f43',
+  });
+
+  showIntro(root, {
+    emoji: '🏗️',
+    title: 'Tower of Babel',
+    concept: 'The OSI model describes how data moves through a network in 7 layers. Each layer has a specific job — like floors of a building.',
+    howto: 'Stack the 7 OSI layers in the correct order (Physical at bottom, Application at top). Answer quiz questions to score!',
+    color: '#ff9f43',
+    onStart: () => {
+      hud.setLeft('🏗️ Tower of Babel');
+      round1();
+    },
+  });
 }

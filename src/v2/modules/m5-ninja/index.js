@@ -1,4 +1,4 @@
-import { makeGameShell, makeHUD, showStarResult } from '../../shared/ui.js';
+import { makeGameShell, makeHUD, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
 
 // ── Object type definitions ───────────────────────────────────────────────────
@@ -77,7 +77,7 @@ function burstParticles(x, y, color, count = 8) {
 // ── Main launch ───────────────────────────────────────────────────────────────
 export function launch(app, state, onComplete) {
   const shell = makeGameShell(app, { bgColor: '#001a10' });
-  const { root, canvas, ctx, W, H, destroy } = shell;
+  const { root, canvas, ctx, W, H, destroy, canvasXY } = shell;
 
   const hud = makeHUD(root, { color: '#46f0c0' });
 
@@ -181,11 +181,7 @@ export function launch(app, state, onComplete) {
   });
 
   // ── Input ─────────────────────────────────────────────────────────────────
-  function pointerPos(e) {
-    const rect = canvas.getBoundingClientRect();
-    const p = e.touches ? e.touches[0] : e;
-    return { x: p.clientX - rect.left, y: p.clientY - rect.top };
-  }
+  function pointerPos(e) { return canvasXY(e); }
 
   function onPointerDown(e) {
     e.preventDefault();
@@ -608,10 +604,25 @@ export function launch(app, state, onComplete) {
   }
 
   // ── Init ──────────────────────────────────────────────────────────────────
-  requestAnimationFrame((ts) => {
-    lastTs = ts;
-    showRoundOverlay('ROUND 1');
-    raf = requestAnimationFrame(loop);
+  showLessonBanner(root, {
+    concept: 'Firewalls & Packet Filtering',
+    detail: 'Firewalls inspect every packet and block threats. Real or fake — a firewall decides in milliseconds.',
+    color: '#46f0c0',
+  });
+
+  showIntro(root, {
+    emoji: '🥷',
+    title: 'Cyber Ninja',
+    concept: 'Firewalls filter network traffic — blocking malicious packets while letting real ones through. Slash the fakes!',
+    howto: 'Swipe/drag to slash FAKE packets flying across the screen. Let REAL packets pass through safely.',
+    color: '#46f0c0',
+    onStart: () => {
+      requestAnimationFrame((ts) => {
+        lastTs = ts;
+        showRoundOverlay('ROUND 1');
+        raf = requestAnimationFrame(loop);
+      });
+    },
   });
 
   function cleanup() {

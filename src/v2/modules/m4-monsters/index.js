@@ -1,9 +1,9 @@
-import { makeGameShell, makeHUD, showStarResult } from '../../shared/ui.js';
+import { makeGameShell, makeHUD, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
 
 export function launch(app, state, onComplete) {
   const shell = makeGameShell(app, { bgColor: '#0a0014' });
-  const { root, canvas, ctx, W, H, destroy } = shell;
+  const { root, canvas, ctx, W, H, destroy, canvasXY } = shell;
   const hud = makeHUD(root, { color: '#7fd8ff' });
 
   const backBtn = document.createElement('button');
@@ -225,8 +225,7 @@ export function launch(app, state, onComplete) {
   // ── Click handler ────────────────────────────────────────────────────────────
   canvas.addEventListener('click', e => {
     if (phase !== 'build') return;
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    const { x: mx, y: my } = canvasXY(e);
     const hit = allNodes().find(n => Math.hypot(n.x - mx, n.y - my) < 28);
     if (!hit) { selected = null; return; }
     sfx.click();
@@ -309,7 +308,22 @@ export function launch(app, state, onComplete) {
     cancelAnimationFrame(rafId); destroy(); onComplete(stars, coins);
   }
 
-  hud.setLeft('👾 Module 4');
-  hud.setCenter('⚡ Build backup links before the monsters arrive!');
-  hud.setRight(`🔗 0/${MAX_BL}`);
+  showLessonBanner(root, {
+    concept: 'Network Redundancy & Fault Tolerance',
+    detail: 'Redundant links keep networks alive when nodes fail. The internet was designed to survive attacks!',
+    color: '#c9b6ff',
+  });
+
+  showIntro(root, {
+    emoji: '👾',
+    title: 'Monster Attack',
+    concept: 'Redundancy means having backup paths so if one link fails, data still gets through. Build extras before monsters destroy them!',
+    howto: 'Click two nodes to add a backup link. Monsters will attack — buildings with backups stay online.',
+    color: '#c9b6ff',
+    onStart: () => {
+      hud.setLeft('👾 Module 4');
+      hud.setCenter('⚡ Build backup links before the monsters arrive!');
+      hud.setRight(`🔗 0/${MAX_BL}`);
+    },
+  });
 }

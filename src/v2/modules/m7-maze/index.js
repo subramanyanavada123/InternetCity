@@ -1,4 +1,4 @@
-import { makeGameShell, makeHUD, showStarResult } from '../../shared/ui.js';
+import { makeGameShell, makeHUD, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
 
 const MAZE = [
@@ -63,7 +63,7 @@ function popEmoji(root, x, y, text) {
 
 export function launch(app, state, onComplete) {
   const shell = makeGameShell(app, { bgColor: '#1a1200' });
-  const { root, canvas, ctx, W, H, destroy } = shell;
+  const { root, canvas, ctx, W, H, destroy, canvasXY } = shell;
   const hud = makeHUD(root, { color: '#ffd700' });
 
   const backBtn = document.createElement('button');
@@ -198,9 +198,8 @@ export function launch(app, state, onComplete) {
 
   function handleClick(e) {
     if (phase !== 'drawing') return;
-    const rect = canvas.getBoundingClientRect();
-    const p = e.touches ? e.touches[0] : e;
-    const cell = pixelToCell(p.clientX-rect.left, p.clientY-rect.top);
+    const { x: px, y: py } = canvasXY(e);
+    const cell = pixelToCell(px, py);
     if (!cell) return;
     const [r, c] = cell;
     if (MAZE[r][c] === 1) { sfx.block(); return; }
@@ -226,9 +225,24 @@ export function launch(app, state, onComplete) {
     }
   }
 
-  canvas.addEventListener('click', handleClick);
-  canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleClick(e); }, { passive: false });
-  raf = requestAnimationFrame(loop);
+  showLessonBanner(root, {
+    concept: 'Shortest Path & Dijkstra\'s Algorithm',
+    detail: 'Routers find the fastest route using graph algorithms. Fewer hops = lower latency.',
+    color: '#ffec3d',
+  });
+
+  showIntro(root, {
+    emoji: '🗺️',
+    title: 'Maze Post Office',
+    concept: 'The internet routes packets through the shortest path. Dijkstra\'s algorithm finds the fastest route between any two points.',
+    howto: 'Tap cells to draw your path from START to all delivery points. Shortest path = more stars!',
+    color: '#ffec3d',
+    onStart: () => {
+      canvas.addEventListener('click', handleClick);
+      canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleClick(e); }, { passive: false });
+      raf = requestAnimationFrame(loop);
+    },
+  });
 
   function cleanup() {
     if (raf) cancelAnimationFrame(raf);

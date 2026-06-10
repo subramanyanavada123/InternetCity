@@ -1,5 +1,5 @@
 // Module 3 — Rocket Launch Center  (Priority Queues & Scheduling)
-import { makeHUD, makeCard, showStarResult } from '../../shared/ui.js';
+import { makeHUD, makeCard, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
 
 const TYPES = [
@@ -473,8 +473,22 @@ export function launch(app, state, onComplete) {
     if (timeLeft <= 0) finish(false);
   }, 1000);
 
-  // initial rockets
-  incoming.push(mkRocket());
-  incoming.push(mkRocket());
-  render();
+  showLessonBanner(root, {
+    concept: 'Priority Queues & Scheduling',
+    detail: 'Networks prioritise critical traffic (VoIP, video) over bulk data. This is called QoS — Quality of Service.',
+    color: '#ff6b35',
+  });
+
+  showIntro(root, {
+    emoji: '🚀',
+    title: 'Rocket Launch',
+    concept: 'Priority scheduling decides which tasks run first. Emergency signals jump the queue — just like 911 calls skip phone congestion.',
+    howto: 'Drag rockets into the launch queue. High-priority rockets (red) must launch before low-priority ones!',
+    color: '#ff6b35',
+    onStart: () => {
+      incoming.push(mkRocket());
+      incoming.push(mkRocket());
+      render();
+    },
+  });
 }

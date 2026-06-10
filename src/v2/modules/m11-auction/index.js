@@ -1,4 +1,4 @@
-import { makeHUD, makeCard, showStarResult } from '../../shared/ui.js';
+import { makeHUD, makeCard, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
 
 // ── Bidder definitions ────────────────────────────────────────────────────────
@@ -442,6 +442,18 @@ export function launch(app, state, onComplete) {
     root.remove();
   }
 
-  // ── Boot ─────────────────────────────────────────────────────────────────
-  startRound();
+  showLessonBanner(root, {
+    concept: 'Bandwidth Allocation & QoS',
+    detail: 'Networks share limited bandwidth between many users. Prioritising critical services keeps the network fair and reliable.',
+    color: '#e17055',
+  });
+
+  showIntro(root, {
+    emoji: '💰',
+    title: 'Auction House',
+    concept: 'Bandwidth is a shared resource. QoS (Quality of Service) allocates it fairly — emergency services first, streaming last.',
+    howto: 'Drag sliders to allocate bandwidth to each service. Keep critical services (hospital, fire) above their minimum threshold!',
+    color: '#e17055',
+    onStart: () => { startRound(); },
+  });
 }

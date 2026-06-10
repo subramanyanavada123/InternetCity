@@ -30,12 +30,24 @@ export function makeGameShell(app, { bgColor = '#0a0a1a' } = {}) {
   const W   = () => root.clientWidth;
   const H   = () => root.clientHeight;
 
+  // Convert a mouse/touch event to canvas CSS-pixel coordinates (DPR-safe)
+  const canvasXY = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const src  = e.touches ? e.touches[0] : (e.changedTouches ? e.changedTouches[0] : e);
+    const scaleX = rect.width  ? root.clientWidth  / rect.width  : 1;
+    const scaleY = rect.height ? root.clientHeight / rect.height : 1;
+    return {
+      x: (src.clientX - rect.left) * scaleX,
+      y: (src.clientY - rect.top)  * scaleY,
+    };
+  };
+
   const destroy = () => {
     window.removeEventListener('resize', resize);
     root.remove();
   };
 
-  return { root, canvas, ctx, W, H, destroy };
+  return { root, canvas, ctx, W, H, destroy, canvasXY };
 }
 
 // Overlay card (modal-style) — returns { el, body, remove }
@@ -153,6 +165,60 @@ export function coinBurst(parent, x, y, amount) {
   `;
   document.head.appendChild(s);
 })();
+
+// Lesson banner pinned to bottom of a game shell
+export function showLessonBanner(parent, { concept, detail, color = '#46f0c0' }) {
+  const el = document.createElement('div');
+  el.style.cssText = `
+    position:absolute;bottom:0;left:0;right:0;z-index:55;
+    background:linear-gradient(to top,rgba(0,0,0,0.92) 0%,rgba(0,0,0,0.7) 70%,transparent 100%);
+    padding:10px 16px 14px;pointer-events:none;
+  `;
+  el.innerHTML = `
+    <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:${color};font-weight:700;margin-bottom:2px;">💡 You're learning</div>
+    <div style="font-size:13px;font-weight:700;color:#fff;">${concept}</div>
+    <div style="font-size:11px;color:#8aa6b4;margin-top:1px;line-height:1.4;">${detail}</div>
+  `;
+  parent.appendChild(el);
+  return el;
+}
+
+// Intro splash before gameplay — calls onStart when dismissed
+export function showIntro(parent, { emoji, title, concept, howto, color = '#46f0c0', onStart }) {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = `
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.82);backdrop-filter:blur(8px);z-index:200;padding:20px;
+  `;
+  wrap.innerHTML = `
+    <div style="
+      background:#0d1f2d;border:1px solid ${color}44;border-radius:24px;
+      padding:28px 24px;width:min(400px,100%);text-align:center;
+    ">
+      <div style="font-size:52px;margin-bottom:10px;">${emoji}</div>
+      <div style="font-size:11px;color:${color};letter-spacing:3px;text-transform:uppercase;font-weight:700;margin-bottom:6px;">Mission</div>
+      <div style="font-size:22px;font-weight:700;color:#fff;margin-bottom:14px;">${title}</div>
+      <div style="
+        background:${color}18;border:1px solid ${color}33;border-radius:12px;
+        padding:12px 16px;margin-bottom:16px;text-align:left;
+      ">
+        <div style="font-size:10px;color:${color};letter-spacing:2px;text-transform:uppercase;font-weight:700;margin-bottom:4px;">💡 What you'll learn</div>
+        <div style="font-size:13px;color:#e0f4ec;line-height:1.5;">${concept}</div>
+      </div>
+      <div style="font-size:12px;color:#8aa6b4;margin-bottom:20px;line-height:1.5;">${howto}</div>
+      <button id="intro-start" style="
+        width:100%;padding:14px;border-radius:12px;border:none;
+        background:${color};color:#000;font-size:15px;font-weight:700;
+        cursor:pointer;font-family:inherit;
+      ">Let's Play ▶</button>
+    </div>
+  `;
+  parent.appendChild(wrap);
+  wrap.querySelector('#intro-start').addEventListener('click', () => {
+    wrap.remove();
+    onStart();
+  });
+}
 
 // Stars result screen — calls onContinue(stars)
 export function showStarResult(parent, { stars, maxStars = 3, title, lines = [], coins = 0, color = '#ffd700', onContinue }) {

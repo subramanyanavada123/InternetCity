@@ -1,4 +1,4 @@
-import { makeGameShell, makeHUD, showStarResult } from '../../shared/ui.js';
+import { makeGameShell, makeHUD, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -105,7 +105,7 @@ function makeFloat(root, x, y, text) {
 // ── Main launch ───────────────────────────────────────────────────────────────
 export function launch(app, state, onComplete) {
   const shell = makeGameShell(app, { bgColor: '#05050f' });
-  const { root, canvas, ctx, W, H, destroy } = shell;
+  const { root, canvas, ctx, W, H, destroy, canvasXY } = shell;
   const hud = makeHUD(root, { color: '#46f0c0' });
 
   // Back button
@@ -309,11 +309,7 @@ export function launch(app, state, onComplete) {
   }
 
   // ── Click handler ─────────────────────────────────────────────────────────
-  function getCanvasPos(e) {
-    const rect = canvas.getBoundingClientRect();
-    const p = e.touches ? e.touches[0] : e;
-    return { x: p.clientX - rect.left, y: p.clientY - rect.top };
-  }
+  function getCanvasPos(e) { return canvasXY(e); }
 
   function findDistrictAt(x, y) {
     for (let i = 0; i < districts.length; i++) {
@@ -729,9 +725,24 @@ export function launch(app, state, onComplete) {
   }
 
   // ── Init & start ──────────────────────────────────────────────────────────
-  requestAnimationFrame(() => {
-    initGame();
-    raf = requestAnimationFrame(loop);
+  showLessonBanner(root, {
+    concept: 'Congestion Control & Traffic Shaping',
+    detail: 'Networks slow down when too much data flows through one link. Routing spreads the load.',
+    color: '#ff3860',
+  });
+
+  showIntro(root, {
+    emoji: '🚗',
+    title: 'Traffic Hero',
+    concept: 'Congestion happens when too many packets share one route. Smart routing spreads traffic across multiple paths.',
+    howto: 'Tap roads to upgrade them. Keep all districts green — red means congested and packets are being dropped!',
+    color: '#ff3860',
+    onStart: () => {
+      requestAnimationFrame(() => {
+        initGame();
+        raf = requestAnimationFrame(loop);
+      });
+    },
   });
 
   function cleanup() {

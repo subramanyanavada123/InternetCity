@@ -1,4 +1,4 @@
-import { makeGameShell, makeHUD, showStarResult } from '../../shared/ui.js';
+import { makeGameShell, makeHUD, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
 
 // ─── Layout helpers ──────────────────────────────────────────────────────────
@@ -143,9 +143,7 @@ export function launch(app, state, onComplete) {
   // ── Click handling ─────────────────────────────────────────────────────────
   function onCanvasClick(e) {
     if (ended) return;
-    const rect = canvas.getBoundingClientRect();
-    const cx = e.clientX - rect.left;
-    const cy = e.clientY - rect.top;
+    const { x: cx, y: cy } = canvasXY(e);
 
     // Check gate nodes (excluding src and snk)
     for (const n of nodes) {
@@ -568,5 +566,18 @@ export function launch(app, state, onComplete) {
     destroy();
   }
 
-  rafId = requestAnimationFrame(loop);
+  showLessonBanner(root, {
+    concept: 'Packet Routing & Bandwidth',
+    detail: 'Data flows like water — it follows open paths and stops at congested links. Gates = routers.',
+    color: '#00b4ff',
+  });
+
+  showIntro(root, {
+    emoji: '💧',
+    title: 'Water Park',
+    concept: 'Networks route data through pipes. Bandwidth limits flow. Open the right gates to reach every zone!',
+    howto: 'Tap nodes to toggle gates open/closed. Route water from the source to all destinations.',
+    color: '#00b4ff',
+    onStart: () => { rafId = requestAnimationFrame(loop); },
+  });
 }

@@ -1,4 +1,4 @@
-import { makeGameShell, makeHUD, coinBurst, showStarResult } from '../../shared/ui.js';
+import { makeGameShell, makeHUD, coinBurst, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
 
 // ── Building definitions ──────────────────────────────────────────────────────
@@ -79,7 +79,7 @@ function makeTruck(road, buildings, slow) {
 // ── Main launch ───────────────────────────────────────────────────────────────
 export function launch(app, state, onComplete) {
   const shell = makeGameShell(app, { bgColor: '#1a1200' });
-  const { root, canvas, ctx, W, H, destroy } = shell;
+  const { root, canvas, ctx, W, H, destroy, canvasXY } = shell;
 
   const hud = makeHUD(root, { color: '#ffd700' });
 
@@ -230,12 +230,6 @@ export function launch(app, state, onComplete) {
   }
 
   // ── Input handling ────────────────────────────────────────────────────────
-  function pointerPos(e) {
-    const rect = canvas.getBoundingClientRect();
-    const p = e.touches ? e.touches[0] : e;
-    return { x: p.clientX - rect.left, y: p.clientY - rect.top };
-  }
-
   function findBuilding(x, y) {
     const r = buildingRadius() + 10;
     for (let i = 0; i < buildings.length; i++) {
@@ -246,7 +240,7 @@ export function launch(app, state, onComplete) {
 
   function onDown(e) {
     e.preventDefault();
-    const { x, y } = pointerPos(e);
+    const { x, y } = canvasXY(e);
     const idx = findBuilding(x, y);
     if (idx >= 0) { dragFrom = idx; dragPos = { x, y }; }
   }
@@ -254,13 +248,13 @@ export function launch(app, state, onComplete) {
   function onMove(e) {
     e.preventDefault();
     if (dragFrom === null) return;
-    dragPos = pointerPos(e);
+    dragPos = canvasXY(e);
   }
 
   function onUp(e) {
     e.preventDefault();
     if (dragFrom === null) return;
-    const { x, y } = pointerPos(e);
+    const { x, y } = canvasXY(e);
     const idx = findBuilding(x, y);
     if (idx >= 0 && idx !== dragFrom) {
       // Avoid duplicate roads
@@ -568,10 +562,24 @@ export function launch(app, state, onComplete) {
   }
 
   // ── Init ──────────────────────────────────────────────────────────────────
-  // Wait one frame so the shell has real dimensions
-  requestAnimationFrame(() => {
-    initBuildings();
-    raf = requestAnimationFrame(loop);
+  showLessonBanner(root, {
+    concept: 'Graph Networks & Routing',
+    detail: 'Every building is a node. Every road is an edge. This is how the internet connects devices.',
+    color: '#ffd700',
+  });
+
+  showIntro(root, {
+    emoji: '🎁',
+    title: 'Delivery Kingdom',
+    concept: 'A network connects nodes with edges so data (or trucks!) can travel between them. Shortest paths mean faster delivery.',
+    howto: 'Drag from one building to another to build a road. Connect all buildings to the Palace to win!',
+    color: '#ffd700',
+    onStart: () => {
+      requestAnimationFrame(() => {
+        initBuildings();
+        raf = requestAnimationFrame(loop);
+      });
+    },
   });
 
   function cleanup() {
