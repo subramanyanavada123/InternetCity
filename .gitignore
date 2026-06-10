@@ -48,3 +48,4 @@ pnpm-debug.log*
 *.tgz
 *.zip
 .claude/settings.json
+.claude/settings.json

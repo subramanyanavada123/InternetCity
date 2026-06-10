@@ -100,7 +100,7 @@ export function renderModuleSelect(app, { modules, progress, onSelect, onBack, o
   s.appendChild(makeChrome('◉ FutureOS Academy', { onBack, onSettings, onMute: true }));
 
   const header = el('div', 'modules-header');
-  const v2Url = window.location.origin + '/v2/';
+  const v2Url = window.location.origin + '/';
   header.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
       <div>
