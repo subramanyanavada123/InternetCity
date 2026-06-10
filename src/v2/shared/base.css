@@ -1,0 +1,75 @@
+/* Internet City V2 — base reset & shared styles */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%; overflow: hidden;
+  background: #0a0a1a;
+  font-family: 'Space Mono', monospace, sans-serif;
+  color: #e0f4ec;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* Home screen needs to scroll — game screens lock it back to hidden */
+body.home-screen { overflow-y: auto; }
+
+#app { width: 100%; min-height: 100%; position: relative; }
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+/* ── Shared game button styles ─────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 10px 20px; border-radius: 12px; font-size: 14px; font-weight: 700;
+  transition: transform 0.1s, opacity 0.1s; cursor: pointer; border: none;
+}
+.btn:active { transform: scale(0.96); }
+.btn-primary { background: #46f0c0; color: #000; }
+.btn-danger  { background: #ff6b6b; color: #fff; }
+.btn-ghost   { background: transparent; border: 1px solid currentColor; }
+.btn:disabled { opacity: 0.4; pointer-events: none; }
+
+/* ── HUD coin display ──────────────────────────────────── */
+.coin-display {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,215,0,0.12); border: 1px solid rgba(255,215,0,0.3);
+  border-radius: 20px; padding: 4px 12px;
+  font-size: 13px; font-weight: 700; color: #ffd700;
+}
+
+/* ── Module card on home screen ────────────────────────── */
+.module-card-v2 {
+  border-radius: 20px; padding: 20px; cursor: pointer;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  transition: transform 0.2s, border-color 0.2s;
+  animation: fadeInUp 0.4s ease both;
+}
+.module-card-v2:hover  { transform: translateY(-4px); }
+.module-card-v2:active { transform: scale(0.97); }
+.module-card-v2.locked { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Progress star strip ───────────────────────────────── */
+.star-strip { font-size: 16px; letter-spacing: 2px; margin-top: 6px; }
+
+/* ── Scrollbars ─────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(70,240,192,0.3); border-radius: 2px; }
+
+/* ── Mobile overrides ───────────────────────────────────── */
+@media (max-width: 480px) {
+  .module-card-v2 { padding: 14px 12px !important; border-radius: 14px !important; }
+  .star-strip { font-size: 12px !important; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
