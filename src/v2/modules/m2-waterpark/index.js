@@ -165,54 +165,14 @@ export function launch(app, state, onComplete) {
         return pk.dropLife > 0;
       }
 
-      const pipe = pk.route[pk.seg];
-      if(!pipe) return false;
-
-      // Drop if this pipe is congested (load exceeds cap)
-      // Only drop ONE packet per pipe per frame to avoid cascade wipes
-      if(pipe.load > pipe.cap){
-        // Mark as dropped but only if this specific packet hasn't been
-        // counted as "the excess" yet — use the load check itself
-        pk.dropped = true;
-        pk.dropLife = 1;
-        dropped++;
-        burst(pk.x, pk.y, '#ff4444', 4);
-        float(pk.x, pk.y-20, '💔', '#ff6644');
-        sfx.block();
-        pipe.load = Math.max(0, pipe.load - 1); // remove from load immediately
-        return true;
-      }
-
-      // Move toward target
-      const dx = pk.tx - pk.x, dy = pk.ty - pk.y;
-      const dist = Math.hypot(dx,dy);
       const step = PACKET_SPEED * dt;
 
-      if(dist <= step){
-        pk.x = pk.tx; pk.y = pk.ty;
-        pk.seg++;
-
-        if(pk.seg >= pk.route.length){
-          // Arrived at pool end — now animate to pool circle
-          const pos = poolPos(pk.poolId);
-          pk.tx = pos.x; pk.ty = pos.y;
-          pk.seg = pk.route.length; // sentinel: traveling to pool center
-          return true;
-        }
-
-        // Advance to next pipe segment
-        const nextPipe = pk.route[pk.seg];
-        const ne = pipeEnds(nextPipe);
-        pk.tx = ne.x2; pk.ty = ne.y2;
-      } else {
-        pk.x += (dx/dist)*step;
-        pk.y += (dy/dist)*step;
-      }
-
-      // Check if we've reached the pool center (sentinel seg)
-      if(pk.seg === pk.route.length){
+      // Sentinel: packet has left all pipe segments and is traveling to pool center
+      if(pk.seg >= pk.route.length){
         const pos = poolPos(pk.poolId);
-        if(Math.hypot(pk.x-pos.x, pk.y-pos.y) <= step+2){
+        const dx = pk.tx - pk.x, dy = pk.ty - pk.y;
+        const dist = Math.hypot(dx, dy);
+        if(dist <= step + 2){
           poolFill[pk.poolId] = Math.min(NEED_PER_POOL, poolFill[pk.poolId]+1);
           delivered++;
           const col = POOLS.find(p=>p.id===pk.poolId).color;
@@ -225,6 +185,47 @@ export function launch(app, state, onComplete) {
           }
           return false;
         }
+        pk.x += (dx/dist)*step;
+        pk.y += (dy/dist)*step;
+        return true;
+      }
+
+      const pipe = pk.route[pk.seg];
+      if(!pipe) return false;
+
+      // Drop if this pipe is congested
+      if(pipe.load > pipe.cap){
+        pk.dropped = true;
+        pk.dropLife = 1;
+        dropped++;
+        burst(pk.x, pk.y, '#ff4444', 4);
+        float(pk.x, pk.y-20, '💔', '#ff6644');
+        sfx.block();
+        pipe.load = Math.max(0, pipe.load - 1);
+        return true;
+      }
+
+      // Move toward target
+      const dx = pk.tx - pk.x, dy = pk.ty - pk.y;
+      const dist = Math.hypot(dx,dy);
+
+      if(dist <= step){
+        pk.x = pk.tx; pk.y = pk.ty;
+        pk.seg++;
+
+        if(pk.seg >= pk.route.length){
+          // All pipe segments done — set target to pool center
+          const pos = poolPos(pk.poolId);
+          pk.tx = pos.x; pk.ty = pos.y;
+        } else {
+          // Advance to next pipe segment
+          const nextPipe = pk.route[pk.seg];
+          const ne = pipeEnds(nextPipe);
+          pk.tx = ne.x2; pk.ty = ne.y2;
+        }
+      } else {
+        pk.x += (dx/dist)*step;
+        pk.y += (dy/dist)*step;
       }
 
       return true;
