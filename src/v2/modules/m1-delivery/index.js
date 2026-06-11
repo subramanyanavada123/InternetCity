@@ -199,8 +199,7 @@ export function launch(app, state, onComplete) {
   function startRound2() {
     round=2; roundDone=false;
     initBuildings(10);
-    const diag=diagonal();
-    r2Budget = Math.round(mstCost(buildings,buildings.length)*1.15); // 15% above MST
+    r2Budget = Math.round(mstCost(buildings,buildings.length)*1.45); // 45% above MST — achievable but demands efficiency
     r2Spent=0;
     hud.setLeft('Round 2/3 — Road Tax 💰');
     hud.setCenter('');
@@ -223,9 +222,9 @@ export function launch(app, state, onComplete) {
   function tryAddRoad2(a,b){
     const dx=buildings[a].x-buildings[b].x, dy=buildings[a].y-buildings[b].y;
     const len=Math.hypot(dx,dy);
-    if(r2Spent+len>r2Budget*1.6){
-      flashMsg('OVER BUDGET! ❌', '#ff4444', W()/2, H()*0.4, true);
-      sfx.block?.() ?? sfx.fail();
+    if(r2Spent+len>r2Budget){
+      flashMsg('NO BUDGET! Use shorter roads 📐', '#ff4444', W()/2, H()*0.38, true);
+      sfx.block();
       return false;
     }
     roads.push({a,b,severed:false});
@@ -252,7 +251,7 @@ export function launch(app, state, onComplete) {
     }
     setTimeout(()=>{
       const pct=Math.round((r2Spent/r2Budget)*100);
-      const stars=isMST?3:pct<90?2:1;
+      const stars=isMST?3:pct<75?2:1;
       totalCoins+=stars*15;
       showBetweenRounds(2, stars,
         [`💰 Budget used: ${Math.round(r2Spent)}/${r2Budget}px (${pct}%)`,
