@@ -1,10 +1,12 @@
 /* Internet City V2 — base reset & shared styles */
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+Kannada:wght@400;700&display=swap');
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
   height: 100%; overflow: hidden;
   background: #0a0a1a;
-  font-family: 'Space Mono', monospace, sans-serif;
+  font-family: 'Space Mono', 'Noto Sans Kannada', monospace, sans-serif;
   color: #e0f4ec;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
@@ -16,12 +18,17 @@ body.home-screen { overflow-y: auto; }
 #app { width: 100%; min-height: 100%; position: relative; }
 
 button {
-  font-family: inherit;
+  font-family: 'Space Mono', 'Noto Sans Kannada', monospace, sans-serif;
   cursor: pointer;
   border: none;
   outline: none;
+  /* D4: all buttons meet 44px minimum touch target */
   min-height: 44px;
+  min-width: 44px;
+  padding: 10px 16px;
+  font-size: 14px;
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ── Shared game button styles ─────────────────────────── */
@@ -50,9 +57,12 @@ button {
   background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
   transition: transform 0.2s, border-color 0.2s;
   animation: fadeInUp 0.4s ease both;
+  /* D6: touch-action:manipulation prevents 300ms delay on tap */
+  touch-action: manipulation;
 }
 .module-card-v2:hover  { transform: translateY(-4px); }
-.module-card-v2:active { transform: scale(0.97); }
+/* D6: tactile active state on touch */
+.module-card-v2:active { transform: scale(0.97); background: rgba(255,255,255,0.07) !important; }
 .module-card-v2.locked { opacity: 0.45; cursor: not-allowed; }
 
 /* ── Progress star strip ───────────────────────────────── */
