@@ -24,7 +24,7 @@ const STRINGS = {
     'ui.complete': '◈ Mission Complete',
     // Module titles
     'm1.title': 'Delivery Kingdom',
-    'm1.sub': 'Build roads, move trucks',
+    'm1.sub': '3 rounds · MST · Earthquake!',
     'm2.title': 'Water Park',
     'm2.sub': 'Pipes, gates & flow',
     'm3.title': 'Rocket Launch',
@@ -48,8 +48,8 @@ const STRINGS = {
     'm12.title': 'Time Traveler',
     'm12.sub': 'Beat latency across the globe',
     // Intro concepts (English)
-    'm1.concept': 'A network connects nodes with edges so data (or trucks!) can travel between them. Shortest paths mean faster delivery.',
-    'm1.howto': 'Drag from one building to another to build a road. Connect all buildings to the Palace to win!',
+    'm1.concept': 'Graph Theory: nodes + edges = networks. Every device on the internet is a node. Every cable is an edge. N nodes need exactly N−1 edges to all connect (Minimum Spanning Tree). More edges = redundancy — the network survives failures.',
+    'm1.howto': '3 rounds: R1 drag roads to connect the city (each road shows live latency in ms!). R2 connect using minimum budget — find the MST! R3 survive an earthquake — redundant roads auto-reroute data.',
     'm2.concept': 'Bandwidth = lanes on a highway. More lanes = more packets flow at once without drops.',
     'm2.howto': 'Tap a pipe to add a lane (upgrade bandwidth). Keep all 4 pools filled before time runs out!',
     'm3.concept': 'Priority Queues: urgent tasks run first. Rockets with higher priority (lower number = more urgent) must launch first or missions fail.',
@@ -95,7 +95,7 @@ const STRINGS = {
     'ui.complete': '◈ ಮಿಷನ್ ಪೂರ್ಣ',
     // Module titles
     'm1.title': 'ವಿತರಣಾ ರಾಜ್ಯ',
-    'm1.sub': 'ರಸ್ತೆ ನಿರ್ಮಿಸಿ, ಟ್ರಕ್ ಚಲಿಸಿ',
+    'm1.sub': '3 ಸುತ್ತು · MST · ಭೂಕಂಪ!',
     'm2.title': 'ನೀರಿನ ಉದ್ಯಾನ',
     'm2.sub': 'ಪೈಪ್, ಗೇಟ್ ಮತ್ತು ಹರಿವು',
     'm3.title': 'ರಾಕೆಟ್ ಉಡಾವಣೆ',
@@ -119,8 +119,8 @@ const STRINGS = {
     'm12.title': 'ಕಾಲ ಪ್ರಯಾಣಿಕ',
     'm12.sub': 'ಜಗತ್ತಿನಾದ್ಯಂತ ತಡ ಗೆಲ್ಲಿ',
     // Intro concepts (Kannada)
-    'm1.concept': 'ನೆಟ್‌ವರ್ಕ್ ನೋಡ್‌ಗಳನ್ನು ಅಂಚುಗಳಿಂದ ಸಂಪರ್ಕಿಸುತ್ತದೆ — ಟ್ರಕ್‌ಗಳು (ಅಥವಾ ಡೇಟಾ) ಚಲಿಸಲು. ಚಿಕ್ಕ ರಸ್ತೆ = ತ್ವರಿತ ವಿತರಣೆ.',
-    'm1.howto': 'ಒಂದು ಕಟ್ಟಡದಿಂದ ಇನ್ನೊಂದಕ್ಕೆ ಎಳೆದು ರಸ್ತೆ ನಿರ್ಮಿಸಿ. ಎಲ್ಲ ಕಟ್ಟಡಗಳನ್ನು ಅರಮನೆಗೆ ಸಂಪರ್ಕಿಸಿ!',
+    'm1.concept': 'ಗ್ರಾಫ್ ಥಿಯರಿ: ನೋಡ್‌ಗಳು + ಅಂಚುಗಳು = ನೆಟ್‌ವರ್ಕ್. N ನೋಡ್‌ಗಳಿಗೆ N−1 ಅಂಚುಗಳು ಸಾಕು (ಮಿನಿಮಮ್ ಸ್ಪ್ಯಾನಿಂಗ್ ಟ್ರೀ). ಹೆಚ್ಚು ಅಂಚುಗಳು = ರಿಡಂಡೆನ್ಸಿ = ವೈಫಲ್ಯ ತಡೆ.',
+    'm1.howto': '3 ಸುತ್ತುಗಳು: ಸ1 ರಸ್ತೆ ನಿರ್ಮಿಸಿ (ಲೇಟೆನ್ಸಿ ms ನೋಡಿ). ಸ2 ಬಜೆಟ್‌ನಲ್ಲಿ MST ಹುಡುಕಿ. ಸ3 ಭೂಕಂಪ ತಡೆದುಕೊಳ್ಳಿ!',
     'm2.concept': 'ಬ್ಯಾಂಡ್‌ವಿಡ್ತ್ = ಹೆದ್ದಾರಿಯ ಲೇನ್‌ಗಳು. ಹೆಚ್ಚು ಲೇನ್ = ಒಮ್ಮೆಗೆ ಹೆಚ್ಚು ಪ್ಯಾಕೆಟ್‌ಗಳು ಹರಿಯುತ್ತವೆ.',
     'm2.howto': 'ಪೈಪ್ ತಟ್ಟಿ ಲೇನ್ ಸೇರಿಸಿ. 4 ಕೊಳಗಳನ್ನು ತುಂಬಿಸಿ!',
     'm3.concept': 'ಆದ್ಯತಾ ಕ್ಯೂ: ತುರ್ತು ಕೆಲಸ ಮೊದಲು. P1 = ಅತ್ಯಂತ ತುರ್ತು, P4 = ಕಡಿಮೆ ತುರ್ತು.',
