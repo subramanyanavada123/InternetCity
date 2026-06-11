@@ -43,7 +43,7 @@ const ROUTES = {
 };
 
 const NEED_PER_POOL = 12;
-const SPAWN_INTERVAL = 0.32;  // seconds between spawns
+const SPAWN_INTERVAL = 0.7;   // seconds between spawns
 const TOTAL_TIME     = 75;
 const MAX_CAP        = 5;
 const PACKET_SPEED   = 200;   // px/sec
@@ -68,7 +68,9 @@ export function launch(app, state, onComplete) {
 
   // ── State ──────────────────────────────────────────────────────────────────
   // pipes: runtime state for each pipe
-  let pipes = PIPE_DEFS.map(d => ({ ...d, cap:1, load:0, upgFlash:0 }));
+  // Trunk pipes (p0, p1) serve 2 pools each so start with cap:2;
+  // branch pipes (p2-p5) serve 1 pool each so cap:1
+  let pipes = PIPE_DEFS.map(d => ({ ...d, cap: d.toPool===null ? 2 : 1, load:0, upgFlash:0 }));
   let packets   = [];
   let particles = [];
   let floaters  = [];
