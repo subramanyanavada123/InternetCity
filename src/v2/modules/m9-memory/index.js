@@ -1,5 +1,6 @@
 import { makeGameShell, makeHUD, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
+import { t } from '../../shared/i18n.js';
 
 const ITEMS = ['🍎','🥐','🧃','🍕','🧁','🥤','🍜','🥗','🍦','🧀','🥨','🍩'];
 const COLORS = ['#e74c3c','#f39c12','#27ae60','#e67e22','#8e44ad','#2980b9','#d35400','#16a085','#1abc9c','#f1c40f','#c0392b','#9b59b6'];
@@ -243,16 +244,16 @@ export function launch(app, state, onComplete) {
   }
 
   showLessonBanner(root, {
-    concept: 'CPU Cache & LRU Eviction',
+    concept: t('m9.concept'),
     detail: 'Caches store frequently used data close to the CPU. When full, the Least Recently Used item is evicted.',
     color: '#fd79a8',
   });
 
   showIntro(root, {
     emoji: '🧠',
-    title: 'Memory Palace',
-    concept: 'Caches make computers fast — but they\'re small! When full, the LRU (Least Recently Used) item is removed to make space.',
-    howto: 'Customers request items. Tap the storeroom to fetch them into cache. Keep popular items cached!',
+    title: t('m9.title'),
+    concept: t('m9.concept'),
+    howto: t('m9.howto'),
     color: '#fd79a8',
     onStart: () => { raf=requestAnimationFrame(loop); },
   });

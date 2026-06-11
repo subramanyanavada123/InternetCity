@@ -1,6 +1,7 @@
 // Module 3 — Rocket Launch Center  (Priority Queues & Scheduling)
 import { makeHUD, makeCard, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
+import { t } from '../../shared/i18n.js';
 
 const TYPES = [
   { id: 'medical',   emoji: '🚑', label: 'EMERGENCY', priority: 4, color: '#ff6b6b' },
@@ -484,20 +485,16 @@ export function launch(app, state, onComplete) {
   }, 1000);
 
   showLessonBanner(root, {
-    concept: 'Priority Queues & Scheduling',
+    concept: t('m3.concept'),
     detail: 'Networks prioritise critical traffic (VoIP, video) over bulk data. This is called QoS — Quality of Service.',
     color: '#ff6b35',
   });
 
   showIntro(root, {
     emoji: '🚀',
-    title: 'Rocket Launch',
-    concept: 'Priority Queues decide which task runs FIRST. Hospitals get ambulances before pizza deliveries. Networks send emergency data before cat videos.',
-    howto: `Rockets arrive on the LEFT with priorities P1–P4.
-Drag them to the QUEUE on the RIGHT.
-Every 8 seconds the TOP of the queue auto-launches.
-Put the HIGHEST priority (P4) at the top to score!
-Wrong order = points deducted.`,
+    title: t('m3.title'),
+    concept: t('m3.concept'),
+    howto: t('m3.howto'),
     color: '#c9b6ff',
     onStart: () => {
       incoming.push(mkRocket());

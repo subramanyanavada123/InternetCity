@@ -1,5 +1,6 @@
 import { makeGameShell, makeHUD, coinBurst, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
+import { t } from '../../shared/i18n.js';
 
 // ── Building definitions ──────────────────────────────────────────────────────
 const BUILDING_DEFS = [
@@ -563,16 +564,16 @@ export function launch(app, state, onComplete) {
 
   // ── Init ──────────────────────────────────────────────────────────────────
   showLessonBanner(root, {
-    concept: 'Graph Networks & Routing',
+    concept: t('m1.concept'),
     detail: 'Every building is a node. Every road is an edge. This is how the internet connects devices.',
     color: '#ffd700',
   });
 
   showIntro(root, {
     emoji: '🎁',
-    title: 'Delivery Kingdom',
-    concept: 'A network connects nodes with edges so data (or trucks!) can travel between them. Shortest paths mean faster delivery.',
-    howto: 'Drag from one building to another to build a road. Connect all buildings to the Palace to win!',
+    title: t('m1.title'),
+    concept: t('m1.concept'),
+    howto: t('m1.howto'),
     color: '#ffd700',
     onStart: () => {
       requestAnimationFrame(() => {

@@ -1,5 +1,6 @@
 import { makeGameShell, makeHUD, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
+import { t } from '../../shared/i18n.js';
 
 export function launch(app, state, onComplete) {
   const shell = makeGameShell(app, { bgColor: '#0a0014' });
@@ -317,16 +318,16 @@ export function launch(app, state, onComplete) {
   }
 
   showLessonBanner(root, {
-    concept: 'Network Redundancy',
+    concept: t('m4.concept'),
     detail: 'Real internet cables break. Redundancy = extra backup paths so data still flows around failures.',
     color: '#c9b6ff',
   });
 
   showIntro(root, {
     emoji: '👾',
-    title: 'Monster Attack!',
-    concept: 'Network Redundancy: The internet was designed to survive nuclear attacks by routing around broken links. Engineers add "backup paths" so if one cable is cut, data takes a different route. Buildings with only one path go dark when that path breaks.',
-    howto: 'You have 30 seconds to add up to 5 backup links (gold dashed lines). Then 3 monsters destroy towers. Buildings connected to the DC by ANY path stay online. Goal: keep 6+ buildings online for 2 stars, all 8 for 3 stars.',
+    title: t('m4.title'),
+    concept: t('m4.concept'),
+    howto: t('m4.howto'),
     color: '#c9b6ff',
     onStart: () => {
       hud.setLeft('👾 Redundancy');

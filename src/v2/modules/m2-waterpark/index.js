@@ -1,5 +1,6 @@
 import { makeGameShell, makeHUD, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
+import { t } from '../../shared/i18n.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MODULE 2 — PIPE BUILDER
@@ -469,18 +470,16 @@ export function launch(app, state, onComplete) {
 
   // ── Lesson + intro ────────────────────────────────────────────────────────
   showLessonBanner(root, {
-    concept: 'Bandwidth = Lanes on a Highway',
+    concept: t('m2.concept'),
     detail: 'More bandwidth = more packets can travel at once. Congested links drop packets. Tap pipes to add lanes!',
     color: '#44ccff',
   });
 
   showIntro(root, {
     emoji: '💧',
-    title: 'Pipe Upgrade Challenge',
-    concept: 'Bandwidth limits how many data packets travel at once. When a pipe is full — packets get DROPPED. Add more lanes to carry more data!',
-    howto: `Watch the packets (colored squares) travel to pools 🏖️🏊🎢🌊.
-When a pipe shows red — TAP IT to add a lane.
-Fill all 4 pools before time runs out!`,
+    title: t('m2.title'),
+    concept: t('m2.concept'),
+    howto: t('m2.howto'),
     color: '#44ccff',
     onStart: () => { rafId = requestAnimationFrame(loop); },
   });

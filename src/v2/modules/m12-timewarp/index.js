@@ -1,5 +1,6 @@
 import { makeGameShell, makeHUD, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
+import { t } from '../../shared/i18n.js';
 
 const CONTINENTS = [
   [[0.04,0.22],[0.18,0.18],[0.27,0.20],[0.30,0.28],[0.28,0.38],[0.22,0.45],[0.18,0.52],[0.12,0.55],[0.06,0.50],[0.04,0.42],[0.02,0.32]],
@@ -284,16 +285,16 @@ export function launch(app, state, onComplete) {
   }
 
   showLessonBanner(root, {
-    concept: 'Latency & Network Routing',
+    concept: t('m12.concept'),
     detail: 'Latency = how long data takes to travel. Routing via nearby servers reduces delay. Used in CDNs worldwide.',
     color: '#a29bfe',
   });
 
   showIntro(root, {
     emoji: '⏱️',
-    title: 'Time Traveler',
-    concept: 'Latency: Every cable and router adds delay. A signal from New York to Tokyo travels ~11,000 km of fiber — that takes ~55ms just for physics! Real networks use relays (middle servers) to avoid congested long routes. CDNs place servers near users for this reason.',
-    howto: 'Click cities to build a route from 📡 source to 🎯 destination (you need at least N relay hops). Place ⚡ boosters on slow long segments by clicking empty ocean. Beat the ms target to win the round. Shorter total cable distance = lower latency!',
+    title: t('m12.title'),
+    concept: t('m12.concept'),
+    howto: t('m12.howto'),
     color: '#a29bfe',
     onStart: () => {
       initRound();

@@ -1,5 +1,6 @@
 import { makeHUD, makeCard, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
+import { t } from '../../shared/i18n.js';
 
 // ── Bidder definitions ────────────────────────────────────────────────────────
 const BASE_BIDDERS = [
@@ -443,16 +444,16 @@ export function launch(app, state, onComplete) {
   }
 
   showLessonBanner(root, {
-    concept: 'Bandwidth Allocation & QoS',
+    concept: t('m11.concept'),
     detail: 'Networks share limited bandwidth between many users. Prioritising critical services keeps the network fair and reliable.',
     color: '#e17055',
   });
 
   showIntro(root, {
     emoji: '💰',
-    title: 'Auction House',
-    concept: 'Bandwidth is a shared resource. QoS (Quality of Service) allocates it fairly — emergency services first, streaming last.',
-    howto: 'Drag sliders to allocate bandwidth to each service. Keep critical services (hospital, fire) above their minimum threshold!',
+    title: t('m11.title'),
+    concept: t('m11.concept'),
+    howto: t('m11.howto'),
     color: '#e17055',
     onStart: () => { startRound(); },
   });

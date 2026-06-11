@@ -1,5 +1,6 @@
 import { makeGameShell, makeHUD, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
+import { t } from '../../shared/i18n.js';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const GAME_DURATION = 90;
@@ -729,16 +730,16 @@ export function launch(app, state, onComplete) {
 
   // ── Init & start ──────────────────────────────────────────────────────────
   showLessonBanner(root, {
-    concept: 'Congestion Control & Traffic Shaping',
+    concept: t('m6.concept'),
     detail: 'Networks slow down when too much data flows through one link. Routing spreads the load.',
     color: '#ff3860',
   });
 
   showIntro(root, {
     emoji: '🚗',
-    title: 'Traffic Hero',
-    concept: 'Congestion happens when too many packets share one route. Smart routing spreads traffic across multiple paths.',
-    howto: 'Tap roads to upgrade them. Keep all districts green — red means congested and packets are being dropped!',
+    title: t('m6.title'),
+    concept: t('m6.concept'),
+    howto: t('m6.howto'),
     color: '#ff3860',
     onStart: () => {
       requestAnimationFrame(() => {

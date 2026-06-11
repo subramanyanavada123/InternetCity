@@ -1,5 +1,6 @@
 import { makeGameShell, makeHUD, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
+import { t } from '../../shared/i18n.js';
 
 const MAZE = [
   [0,0,1,0,0,0,1,0,0],
@@ -226,16 +227,16 @@ export function launch(app, state, onComplete) {
   }
 
   showLessonBanner(root, {
-    concept: 'Shortest Path & Dijkstra\'s Algorithm',
+    concept: t('m7.concept'),
     detail: 'Routers find the fastest route using graph algorithms. Fewer hops = lower latency.',
     color: '#ffec3d',
   });
 
   showIntro(root, {
     emoji: '🗺️',
-    title: 'Maze Post Office',
-    concept: 'The internet routes packets through the shortest path. Dijkstra\'s algorithm finds the fastest route between any two points.',
-    howto: 'Tap cells to draw your path from START to all delivery points. Shortest path = more stars!',
+    title: t('m7.title'),
+    concept: t('m7.concept'),
+    howto: t('m7.howto'),
     color: '#ffec3d',
     onStart: () => {
       canvas.addEventListener('click', handleClick);

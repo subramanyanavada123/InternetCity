@@ -1,5 +1,6 @@
 import { makeHUD, makeCard, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
+import { t } from '../../shared/i18n.js';
 
 const LAYERS = [
   { num:7, name:'Application',  emoji:'🌐', color:'#46f0c0', desc:'Where you type your message',  example:'Browser, email app, HTTP' },
@@ -345,16 +346,16 @@ export function launch(app, state, onComplete) {
   }
 
   showLessonBanner(root, {
-    concept: 'OSI 7-Layer Model',
+    concept: t('m8.concept'),
     detail: 'Every network message travels through 7 layers — Physical → Data Link → Network → Transport → Session → Presentation → Application.',
     color: '#ff9f43',
   });
 
   showIntro(root, {
     emoji: '🏗️',
-    title: 'Tower of Babel',
-    concept: 'OSI Model: When you send a WhatsApp message, it passes through 7 layers. App (7) → Encrypt (6) → Session (5) → Split into packets (4) → Route via IP (3) → WiFi/Ethernet hop (2) → Radio waves (1). The receiver rebuilds it in reverse. Engineers use these layers to isolate bugs.',
-    howto: 'Round 1: Drag layers into the tower in order (7 at top, 1 at bottom). Round 2: Answer quiz questions — a cheat sheet stays visible on screen! Round 3: Speed stack against the clock.',
+    title: t('m8.title'),
+    concept: t('m8.concept'),
+    howto: t('m8.howto'),
     color: '#ff9f43',
     onStart: () => {
       hud.setLeft('🏗️ Tower of Babel');

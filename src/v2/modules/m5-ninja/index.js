@@ -1,5 +1,6 @@
 import { makeGameShell, makeHUD, showStarResult, showIntro, showLessonBanner } from '../../shared/ui.js';
 import { sfx } from '../../shared/sfx.js';
+import { t } from '../../shared/i18n.js';
 
 // ── Object type definitions ───────────────────────────────────────────────────
 const REAL_TYPES = [
@@ -605,16 +606,16 @@ export function launch(app, state, onComplete) {
 
   // ── Init ──────────────────────────────────────────────────────────────────
   showLessonBanner(root, {
-    concept: 'Firewalls & Packet Filtering',
+    concept: t('m5.concept'),
     detail: 'Firewalls inspect every packet and block threats. Real or fake — a firewall decides in milliseconds.',
     color: '#46f0c0',
   });
 
   showIntro(root, {
     emoji: '🥷',
-    title: 'Cyber Ninja',
-    concept: 'Firewalls filter network traffic — blocking malicious packets while letting real ones through. Slash the fakes!',
-    howto: 'Swipe/drag to slash FAKE packets flying across the screen. Let REAL packets pass through safely.',
+    title: t('m5.title'),
+    concept: t('m5.concept'),
+    howto: t('m5.howto'),
     color: '#46f0c0',
     onStart: () => {
       requestAnimationFrame((ts) => {
