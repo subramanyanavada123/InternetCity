@@ -2,13 +2,13 @@ import { makeHUD, makeCard, showStarResult, showIntro, showLessonBanner } from '
 import { sfx } from '../../shared/sfx.js';
 
 const LAYERS = [
-  { num:7, name:'Application',  emoji:'🌐', color:'#46f0c0', desc:'Where you type your message'  },
-  { num:6, name:'Presentation', emoji:'🎨', color:'#ffd700', desc:'Translates & encrypts'         },
-  { num:5, name:'Session',      emoji:'🤝', color:'#ff9f43', desc:'Opens & closes the connection' },
-  { num:4, name:'Transport',    emoji:'📦', color:'#ff6b6b', desc:'Splits into packets'           },
-  { num:3, name:'Network',      emoji:'🗺️', color:'#c9b6ff', desc:'Finds the route'              },
-  { num:2, name:'Data Link',    emoji:'🔗', color:'#00b4ff', desc:'Sends to next hop'             },
-  { num:1, name:'Physical',     emoji:'⚡', color:'#a8e063', desc:'Actual cables & signals'       },
+  { num:7, name:'Application',  emoji:'🌐', color:'#46f0c0', desc:'Where you type your message',  example:'Browser, email app, HTTP' },
+  { num:6, name:'Presentation', emoji:'🎨', color:'#ffd700', desc:'Translates & encrypts',         example:'HTTPS encryption, JPEG compression' },
+  { num:5, name:'Session',      emoji:'🤝', color:'#ff9f43', desc:'Opens & closes the connection', example:'Login session, video call setup' },
+  { num:4, name:'Transport',    emoji:'📦', color:'#ff6b6b', desc:'Splits into packets',           example:'TCP ensures delivery, UDP is fast' },
+  { num:3, name:'Network',      emoji:'🗺️', color:'#c9b6ff', desc:'Finds the route',              example:'IP addresses, routers' },
+  { num:2, name:'Data Link',    emoji:'🔗', color:'#00b4ff', desc:'Sends to next hop',             example:'WiFi, Ethernet, MAC addresses' },
+  { num:1, name:'Physical',     emoji:'⚡', color:'#a8e063', desc:'Actual cables & signals',       example:'Fiber optic, copper wire, radio waves' },
 ];
 
 const QUIZ = [
@@ -66,11 +66,19 @@ export function launch(app, state, onComplete) {
   let dragIdx = null, dragEl = null, tClone = null;
 
   // ── helpers ──────────────────────────────────────────────────────────────────
-  function makeBlock(li, draggable) {
+  function makeBlock(li, draggable, showExample) {
     const L = LAYERS[li], el = document.createElement('div');
     el.className = 'm8b'; el.draggable = draggable;
     el.style.background = L.color+'22'; el.style.borderColor = L.color+'88';
-    el.innerHTML = `<span class="em">${L.emoji}</span><div><div class="nm" style="color:${L.color}">${L.num} — ${L.name}</div><div class="ds">${L.desc}</div></div>`;
+    el.innerHTML = `<span class="em">${L.emoji}</span><div><div class="nm" style="color:${L.color}">${L.num} — ${L.name}</div><div class="ds">${L.desc}${showExample ? ' · <em>'+L.example+'</em>' : ''}</div></div>`;
+    return el;
+  }
+
+  function makeCheatSheet() {
+    const el = document.createElement('div');
+    el.style.cssText = 'position:absolute;top:48px;right:8px;width:220px;background:#0a1a0a;border:1px solid #46f0c044;border-radius:10px;padding:8px 10px;z-index:50;font-size:9px;line-height:1.6;';
+    el.innerHTML = '<div style="color:#46f0c0;font-size:9px;letter-spacing:2px;margin-bottom:6px;font-weight:700;">📋 OSI CHEAT SHEET</div>' +
+      LAYERS.map(L => `<div style="color:${L.color};"><strong>${L.num}. ${L.name}</strong> — ${L.example}</div>`).join('');
     return el;
   }
 
@@ -209,12 +217,13 @@ export function launch(app, state, onComplete) {
 
   // ── Round 2 ──────────────────────────────────────────────────────────────────
   function round2() {
-    hud.setCenter('Round 2 — Quiz Time!'); hud.setRight('Score: '+score);
+    hud.setCenter('Round 2 — Quiz! (Use cheat sheet →)'); hud.setRight('Score: '+score);
     const qs=shuffle(QUIZ).slice(0,5); let qi=0, correct=0;
+    const cheatSheet = makeCheatSheet(); root.appendChild(cheatSheet);
 
     function showQ() {
       clearArea();
-      if(qi>=qs.length){round2Score=correct/qs.length; transition(`${correct}/${qs.length} correct`,'Round 2 Complete!',round3); return;}
+      if(qi>=qs.length){cheatSheet.remove(); round2Score=correct/qs.length; transition(`${correct}/${qs.length} correct`,'Round 2 Complete!',round3); return;}
       const area=document.createElement('div');
       area.className='m8area';
       area.style.cssText='position:absolute;inset:48px 0 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:16px;';
@@ -226,7 +235,7 @@ export function launch(app, state, onComplete) {
 
       const timerEl=document.createElement('div');
       timerEl.style.cssText='font-size:32px;font-weight:700;color:#ff6b6b;width:56px;height:56px;border-radius:50%;border:3px solid #ff6b6b;display:flex;align-items:center;justify-content:center;';
-      timerEl.textContent='3';
+      timerEl.textContent='6';
 
       const qEl=document.createElement('div');
       qEl.style.cssText='font-size:16px;color:#fff;font-weight:700;text-align:center;max-width:420px;line-height:1.5;';
@@ -255,7 +264,7 @@ export function launch(app, state, onComplete) {
         optWrap.appendChild(btn);
       });
 
-      let t=3;
+      let t=6;
       const tid=iv(()=>{
         t--; timerEl.textContent=t;
         if(t<=1)timerEl.style.animation='m8tf 0.5s infinite';
@@ -318,8 +327,16 @@ export function launch(app, state, onComplete) {
         const coins=score+stars*20;
         showStarResult(root,{
           stars,maxStars:3,
-          title:['Tower Toppled!','Layer by Layer!','OSI Architect!','Network Master! 🏆'][stars],
-          lines:[`Score: ${score} pts`,`Quiz: ${Math.round(round2Score*100)}% correct`,rem>0?`Speed stack: ${rem}s left`:'Speed stack timed out'],
+          title:['Tower Toppled!','Layer by Layer!','OSI Architect! 🏆','Network Master! 🏆'][stars],
+          lines:[
+            `Score: ${score} pts`,
+            `Quiz: ${Math.round(round2Score*100)}% correct`,
+            rem>0?`Speed stack: ${rem}s left`:'Speed stack timed out',
+            '─────────────────────────',
+            '📡 Every email, video call, webpage you load travels all 7 layers',
+            '🔒 HTTPS is Layer 6/7. IP routing is Layer 3. WiFi is Layer 1/2.',
+            '💡 Engineers use OSI to debug: "Is this a Layer 3 routing problem?"',
+          ],
           coins,color:'#46f0c0',
           onContinue:s=>{cleanup();onComplete(s,coins);}
         });
@@ -336,8 +353,8 @@ export function launch(app, state, onComplete) {
   showIntro(root, {
     emoji: '🏗️',
     title: 'Tower of Babel',
-    concept: 'The OSI model describes how data moves through a network in 7 layers. Each layer has a specific job — like floors of a building.',
-    howto: 'Stack the 7 OSI layers in the correct order (Physical at bottom, Application at top). Answer quiz questions to score!',
+    concept: 'OSI Model: When you send a WhatsApp message, it passes through 7 layers. App (7) → Encrypt (6) → Session (5) → Split into packets (4) → Route via IP (3) → WiFi/Ethernet hop (2) → Radio waves (1). The receiver rebuilds it in reverse. Engineers use these layers to isolate bugs.',
+    howto: 'Round 1: Drag layers into the tower in order (7 at top, 1 at bottom). Round 2: Answer quiz questions — a cheat sheet stays visible on screen! Round 3: Speed stack against the clock.',
     color: '#ff9f43',
     onStart: () => {
       hud.setLeft('🏗️ Tower of Babel');

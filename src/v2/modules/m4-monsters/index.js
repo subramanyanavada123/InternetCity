@@ -214,8 +214,8 @@ export function launch(app, state, onComplete) {
     });
     if (phase === 'build') {
       const t = Math.max(0, 30 - (ts - buildStart) / 1000);
-      hud.setCenter(`⚡ Build backup links! Time: ${Math.ceil(t)}s`);
-      hud.setRight(`🔗 ${backupLinks.length}/${MAX_BL}`);
+      hud.setCenter(`⚡ Click 2 nodes to link | ⏱ ${Math.ceil(t)}s`);
+      hud.setRight(`🔗 ${backupLinks.length}/${MAX_BL} backup links`);
       if (t <= 0) startAttack();
     }
     drawScene(ts);
@@ -294,11 +294,19 @@ export function launch(app, state, onComplete) {
     hud.setCenter('');
     showStarResult(root, {
       stars, maxStars: 3,
-      title: ['City Offline 😞','Partial Coverage 🌐','Good Redundancy! 🛡️','Perfect Redundancy! 🏆'][stars],
-      lines: [`Buildings online: ${onlineCount}/8`, `Backup links built: ${backupLinks.length}`,
-        stars===3?'★ Redundancy Master! All buildings survived!':
-        stars===2?'Good backup coverage!':
-        stars===1?'Some buildings survived.':'No backup paths — city went dark.'],
+      title: ['City Offline 😞','Partial Redundancy 🌐','Good Redundancy! 🛡️','Perfect Redundancy! 🏆'][stars],
+      lines: [
+        `🏙 Buildings online: ${onlineCount}/8`,
+        `🔗 Backup links used: ${backupLinks.length}/${MAX_BL}`,
+        '─────────────────────────',
+        stars===3?'★ Redundancy Master! Every building had an alternate path.':
+        stars===2?'Backup links saved most buildings — redundancy worked!':
+        stars===1?'Some buildings survived via backups, but many were isolated.':
+        'No backup paths → single point of failure. City went dark.',
+        '─────────────────────────',
+        '📡 Real-world: Internet backbone cables have redundant routes.',
+        'When a router fails, packets automatically take another path.',
+      ],
       coins, color: '#ffd700',
       onContinue: () => done(stars, coins),
     });
@@ -309,21 +317,22 @@ export function launch(app, state, onComplete) {
   }
 
   showLessonBanner(root, {
-    concept: 'Network Redundancy & Fault Tolerance',
-    detail: 'Redundant links keep networks alive when nodes fail. The internet was designed to survive attacks!',
+    concept: 'Network Redundancy',
+    detail: 'Real internet cables break. Redundancy = extra backup paths so data still flows around failures.',
     color: '#c9b6ff',
   });
 
   showIntro(root, {
     emoji: '👾',
-    title: 'Monster Attack',
-    concept: 'Redundancy means having backup paths so if one link fails, data still gets through. Build extras before monsters destroy them!',
-    howto: 'Click two nodes to add a backup link. Monsters will attack — buildings with backups stay online.',
+    title: 'Monster Attack!',
+    concept: 'Network Redundancy: The internet was designed to survive nuclear attacks by routing around broken links. Engineers add "backup paths" so if one cable is cut, data takes a different route. Buildings with only one path go dark when that path breaks.',
+    howto: 'You have 30 seconds to add up to 5 backup links (gold dashed lines). Then 3 monsters destroy towers. Buildings connected to the DC by ANY path stay online. Goal: keep 6+ buildings online for 2 stars, all 8 for 3 stars.',
     color: '#c9b6ff',
     onStart: () => {
-      hud.setLeft('👾 Module 4');
-      hud.setCenter('⚡ Build backup links before the monsters arrive!');
-      hud.setRight(`🔗 0/${MAX_BL}`);
+      hud.setLeft('👾 Redundancy');
+      const onlineNow = buildings.filter(b => b.alive).length;
+      hud.setCenter(`⚡ Add backup links — 30s! | 🏙 ${onlineNow}/8 online`);
+      hud.setRight(`🔗 ${backupLinks.length}/${MAX_BL} links`);
     },
   });
 }

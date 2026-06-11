@@ -21,7 +21,9 @@
       "Bash(curl -s http://localhost:5555/v1/)",
       "Bash(pkill -f \"node.*5555\\\\|node.*3000\\\\|node.*3001\\\\|node.*4000\")",
       "Bash(curl -s http://localhost:3000/)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(pkill -f \"node.*serve\\\\|node.*3000\\\\|node.*5555\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/)"
     ],
     "additionalDirectories": [
       "/home/user/internet-city/InternetCityV2/src",

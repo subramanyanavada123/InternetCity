@@ -153,7 +153,7 @@ export function launch(app, state, onComplete) {
 
   function updateHUD() {
     hud.setLeft('◀ Back');
-    hud.setCenter(`⭐ ${score}pts &nbsp;|&nbsp; 🚀 ${launched} launched`);
+    hud.setCenter(`🚀 ${launched}/10 &nbsp;|&nbsp; ✅ ${correct} correct &nbsp;|&nbsp; ⭐ ${score}pts`);
     hud.setRight(`⏱ ${timeLeft}s`);
   }
 
@@ -320,13 +320,10 @@ export function launch(app, state, onComplete) {
   function triggerLaunch() {
     if (queue.length === 0) return;
 
+    // Snapshot queue BEFORE shift — check if top was highest priority in queue
+    const topPriority = Math.max(...queue.map(r => r.priority));
     const launched_rocket = queue.shift();
-    const nextBest = queue.length > 0 ? Math.max(...queue.map(r => r.priority)) : -1;
-
-    // check ordering: was this the highest priority in combined pool?
-    const allPriorities = [...queue, ...incoming].map(r => r.priority);
-    // correct if nothing with higher priority was waiting
-    const wasCorrect = allPriorities.every(p => p <= launched_rocket.priority);
+    const wasCorrect = launched_rocket.priority === topPriority;
 
     launched++;
     if (wasCorrect) {
@@ -335,16 +332,29 @@ export function launch(app, state, onComplete) {
       sfx.launch();
       animateLaunchSuccess(launched_rocket.emoji, launched_rocket.color);
       flashScreen('green');
+      showFeedback(`✅ Correct! P${launched_rocket.priority} launched first`, '#46f0c0');
     } else {
       score = Math.max(0, score - 20);
       sfx.fail();
       flashScreen('red');
-      showMissionFailed();
+      showFeedback(`❌ Wrong order! P${topPriority} should launch first`, '#ff6b6b');
     }
 
     launchCountdown = 8;
     render();
     checkWin();
+  }
+
+  function showFeedback(msg, color) {
+    const el = document.createElement('div');
+    el.style.cssText = `position:absolute;top:60px;left:50%;transform:translateX(-50%);
+      background:rgba(0,0,0,0.8);border:1px solid ${color};border-radius:10px;
+      padding:8px 16px;font-size:12px;font-weight:700;color:${color};
+      z-index:90;pointer-events:none;white-space:nowrap;
+      animation:popIn 0.3s ease both;`;
+    el.textContent = msg;
+    root.appendChild(el);
+    setTimeout(() => el.remove(), 1800);
   }
 
   function animateLaunchSuccess(emoji, color) {
@@ -482,9 +492,13 @@ export function launch(app, state, onComplete) {
   showIntro(root, {
     emoji: '🚀',
     title: 'Rocket Launch',
-    concept: 'Priority scheduling decides which tasks run first. Emergency signals jump the queue — just like 911 calls skip phone congestion.',
-    howto: 'Drag rockets into the launch queue. High-priority rockets (red) must launch before low-priority ones!',
-    color: '#ff6b35',
+    concept: 'Priority Queues decide which task runs FIRST. Hospitals get ambulances before pizza deliveries. Networks send emergency data before cat videos.',
+    howto: `Rockets arrive on the LEFT with priorities P1–P4.
+Drag them to the QUEUE on the RIGHT.
+Every 8 seconds the TOP of the queue auto-launches.
+Put the HIGHEST priority (P4) at the top to score!
+Wrong order = points deducted.`,
+    color: '#c9b6ff',
     onStart: () => {
       incoming.push(mkRocket());
       incoming.push(mkRocket());

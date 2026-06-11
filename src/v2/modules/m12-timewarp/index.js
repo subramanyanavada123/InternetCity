@@ -130,8 +130,18 @@ export function launch(app, state, onComplete) {
     cleanup();
     showStarResult(app, {
       stars, maxStars:3,
-      title: stars===3 ? 'Speed of Light!' : stars===2 ? 'Fast Signal' : 'Signal Sent',
-      lines: [`Rounds beaten: ${roundsWon}/3`, 'Latency · Propagation Delay · Repeaters'],
+      title: stars===3 ? '🏆 Speed of Light!' : stars===2 ? '⚡ Fast Signal' : '📡 Signal Sent',
+      lines: [
+        `Rounds beaten: ${roundsWon}/3`,
+        '─────────────────────────',
+        stars===3?'★ Perfect routing! Minimal latency each round.':
+        stars===2?'Good route choices — mostly beat the time targets.':
+        'Try routing through closer middle cities next time.',
+        '─────────────────────────',
+        '🌍 Real world: Latency = distance ÷ speed of light in fiber (~200,000 km/s)',
+        '📦 CDNs cache content on servers near you to cut latency',
+        '🔁 Each router hop adds ~1-5ms of processing delay',
+      ],
       coins, color:'#a29bfe',
       onContinue: s => onComplete(s, coins),
     });
@@ -257,10 +267,10 @@ export function launch(app, state, onComplete) {
     if (phase==='setup'||phase==='routing') {
       const needed=cfg().hops, chosen=route.length-1;
       const msg = phase==='setup'
-        ? `Click cities to route signal (need ${needed}+ hops to ${CITIES[destIdx].name})`
+        ? `📡 Click ${needed} relay cities, then click 🎯 ${CITIES[destIdx].name} to send signal`
         : chosen<needed
-          ? `Add ${needed-chosen} more hop${needed-chosen>1?'s':''}… then click ${CITIES[destIdx].name}`
-          : `Now click ${CITIES[destIdx].name} to send!`;
+          ? `Click ${needed-chosen} more relay cit${needed-chosen>1?'ies':'y'}… (or ⚡ click ocean to place booster)`
+          : `✅ Route ready! Click 🎯 ${CITIES[destIdx].name} to send!`;
       c.fillStyle='rgba(0,0,0,0.55)'; c.fillRect(0,h-36,w,36);
       c.fillStyle='#a29bfe'; c.font='13px monospace'; c.textAlign='center'; c.textBaseline='middle';
       c.fillText(msg,w/2,h-18);
@@ -274,16 +284,16 @@ export function launch(app, state, onComplete) {
   }
 
   showLessonBanner(root, {
-    concept: 'Latency & Propagation Delay',
-    detail: 'Signal speed is limited by physics. Longer cables = more delay. Routing via closer nodes reduces latency.',
+    concept: 'Latency & Network Routing',
+    detail: 'Latency = how long data takes to travel. Routing via nearby servers reduces delay. Used in CDNs worldwide.',
     color: '#a29bfe',
   });
 
   showIntro(root, {
     emoji: '⏱️',
     title: 'Time Traveler',
-    concept: 'Latency is the time data takes to travel. Distance matters! Routing through nearby servers reduces delay.',
-    howto: 'Select cities to route your signal. Avoid long hops — the shorter your path, the lower the latency!',
+    concept: 'Latency: Every cable and router adds delay. A signal from New York to Tokyo travels ~11,000 km of fiber — that takes ~55ms just for physics! Real networks use relays (middle servers) to avoid congested long routes. CDNs place servers near users for this reason.',
+    howto: 'Click cities to build a route from 📡 source to 🎯 destination (you need at least N relay hops). Place ⚡ boosters on slow long segments by clicking empty ocean. Beat the ms target to win the round. Shorter total cable distance = lower latency!',
     color: '#a29bfe',
     onStart: () => {
       initRound();

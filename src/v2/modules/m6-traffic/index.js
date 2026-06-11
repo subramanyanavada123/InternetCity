@@ -126,11 +126,12 @@ export function launch(app, state, onComplete) {
   let cars      = [];
   let particles = [];
 
-  let happiness   = 80;
+  let happiness   = 50;   // starts at 50 — player must actively manage to push it up
   let coins       = BUDGET;
   let elapsed     = 0;
   let lastSpawn   = 0;
   let spawnPeriod = 2.5; // seconds between spawns
+  let carsSpawned = 0;
   let phaseLabel  = '';
   let phaseFade   = 0;
   let loadTimer   = 0;
@@ -214,14 +215,9 @@ export function launch(app, state, onComplete) {
     }
   }
 
-  // Happiness = average (1 - load/capacity) clamped 0→1
+  // Happiness: 0-100, updated each tick based on congestion
   function calcHappiness() {
-    if (!roads.length) return 1;
-    let sum = 0;
-    for (const r of roads) {
-      sum += Math.max(0, 1 - r.load / r.capacity);
-    }
-    return sum / roads.length;
+    return happiness;
   }
 
   // ── Road selection ────────────────────────────────────────────────────────
@@ -606,7 +602,7 @@ export function launch(app, state, onComplete) {
 
   // ── HUD update ─────────────────────────────────────────────────────────────
   function updateHUD() {
-    const pct = Math.round(happiness * 100);
+    const pct = Math.round(happiness);
     const col = pct > 60 ? '#2ed573' : pct > 30 ? '#ffd700' : '#ff4757';
     const timeLeft = Math.max(0, Math.ceil(GAME_DURATION - elapsed));
     hud.setLeft(`😊 ${pct}%`);
@@ -634,6 +630,7 @@ export function launch(app, state, onComplete) {
     if (lastSpawn >= spawnPeriod) {
       lastSpawn = 0;
       spawnCar();
+      carsSpawned++;
     }
 
     // Move cars
@@ -648,12 +645,18 @@ export function launch(app, state, onComplete) {
     // Remove cars that finished
     cars = cars.filter(car => car.pathIdx < car.path.length - 1);
 
-    // Load update every 0.5s
+    // Load update every 0.5s — happiness degrades with congestion, recovers slowly
     loadTimer += dt;
     if (loadTimer >= 0.5) {
       loadTimer = 0;
       updateLoads();
-      happiness = calcHappiness();
+      if (carsSpawned >= 3) {
+        let congestedCount = roads.filter(r => r.load > r.capacity).length;
+        let flowingCount   = roads.filter(r => r.load > 0 && r.load <= r.capacity).length;
+        happiness = Math.max(0, Math.min(100,
+          happiness - congestedCount * 4 + flowingCount * 1
+        ));
+      }
     }
 
     // Upgrade anim
@@ -697,11 +700,11 @@ export function launch(app, state, onComplete) {
 
   function endGame() {
     updateLoads();
-    const finalHappiness = calcHappiness() * 100;
+    const finalHappiness = happiness; // already 0-100
     let stars = 0;
-    if (finalHappiness > 30) stars = 1;
-    if (finalHappiness > 60) stars = 2;
-    if (finalHappiness > 75) stars = 3;
+    if (finalHappiness > 25) stars = 1;
+    if (finalHappiness > 45) stars = 2;
+    if (finalHappiness > 65) stars = 3;
 
     const coinsEarned = stars * 40 + (coins - BUDGET < 0 ? 0 : coins - BUDGET);
     const titles = ['City in Chaos!', 'City Survived!', 'City Flowing!', 'Traffic Master! 🏆'];
