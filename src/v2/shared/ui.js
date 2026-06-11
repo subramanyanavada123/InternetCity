@@ -1,5 +1,6 @@
 // Shared UI helpers used by all modules.
-import { t } from './i18n.js';
+import { t, getLang } from './i18n.js';
+import { speak, stopSpeaking, makeTTSToggle } from './tts.js';
 
 // Full-screen game wrapper — returns { root, canvas, ctx, W, H, destroy }
 export function makeGameShell(app, { bgColor = '#0a0a1a' } = {}) {
@@ -50,12 +51,15 @@ export function makeGameShell(app, { bgColor = '#0a0a1a' } = {}) {
     };
   };
 
+  const ttsBtn = makeTTSToggle(root);
+
   const destroy = () => {
     window.removeEventListener('resize', resize);
+    stopSpeaking();
     root.remove();
   };
 
-  return { root, canvas, ctx, W, H, destroy, canvasXY };
+  return { root, canvas, ctx, W, H, destroy, canvasXY, ttsBtn };
 }
 
 // Overlay card (modal-style) — returns { el, body, remove }
@@ -285,9 +289,15 @@ export function showIntro(parent, { emoji, title, concept, howto, color = '#46f0
   `;
   btn.textContent = t('btn.play');
   btn.addEventListener('click', () => {
+    stopSpeaking();
     wrap.remove();
     onStart();
   });
+
+  // Voice narration: read the concept text aloud when the intro appears
+  // Strip HTML tags and emoji for cleaner speech
+  const plainConcept = concept.replace(/<[^>]+>/g, '').replace(/[🎮💡📡🏠📬⚡🔊🔇]/gu, '');
+  speak(plainConcept, getLang());
   footer.appendChild(btn);
   card.appendChild(footer);
 
