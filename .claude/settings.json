@@ -23,7 +23,15 @@
       "Bash(curl -s http://localhost:3000/)",
       "Bash(git add *)",
       "Bash(pkill -f \"node.*serve\\\\|node.*3000\\\\|node.*5555\")",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/)",
+      "Bash(curl -s http://localhost:3456)",
+      "Bash(node m2_verify.js)",
+      "Bash(npx --yes playwright --version)",
+      "Read(//home/**)",
+      "Read(//root/**)",
+      "Bash(npm root *)",
+      "Bash(cp /tmp/m2_verify2.js /home/user/.npm/_npx/e41f203b7505f1fb/m2_verify2.js)",
+      "Bash(node m2_verify2.js)"
     ],
     "additionalDirectories": [
       "/home/user/internet-city/InternetCityV2/src",

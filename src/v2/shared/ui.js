@@ -32,10 +32,16 @@ export function makeGameShell(app, { bgColor = '#0a0a1a' } = {}) {
   const W   = () => root.clientWidth;
   const H   = () => root.clientHeight;
 
-  // Convert a mouse/touch event to canvas CSS-pixel coordinates (DPR-safe)
+  // Convert a mouse/touch event to canvas CSS-pixel coordinates (DPR-safe).
+  // touchend fires with touches[]=[] (finger lifted), so prefer changedTouches
+  // then touches — never both, since changedTouches is what moved/lifted.
   const canvasXY = (e) => {
     const rect = canvas.getBoundingClientRect();
-    const src  = e.touches ? e.touches[0] : (e.changedTouches ? e.changedTouches[0] : e);
+    const src  = (e.changedTouches && e.changedTouches.length)
+      ? e.changedTouches[0]
+      : (e.touches && e.touches.length)
+        ? e.touches[0]
+        : e;
     const scaleX = rect.width  ? root.clientWidth  / rect.width  : 1;
     const scaleY = rect.height ? root.clientHeight / rect.height : 1;
     return {
