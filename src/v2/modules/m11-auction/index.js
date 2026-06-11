@@ -434,7 +434,7 @@ export function launch(app, state, onComplete) {
       ],
       coins,
       color: '#ffb347',
-      onContinue: (s) => { cleanup(); onComplete(s, coins); },
+      onContinue: (action,s) => { cleanup(); if(action!=='retry') onComplete(s,coins); else launch(app,state,onComplete); },
     });
   }
 

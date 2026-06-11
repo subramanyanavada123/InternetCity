@@ -144,7 +144,7 @@ export function launch(app, state, onComplete) {
         '🔁 Each router hop adds ~1-5ms of processing delay',
       ],
       coins, color:'#a29bfe',
-      onContinue: s => onComplete(s, coins),
+      onContinue: (action,s) => { if(action!=='retry') onComplete(s,coins); else launch(app,state,onComplete); },
     });
   }
 

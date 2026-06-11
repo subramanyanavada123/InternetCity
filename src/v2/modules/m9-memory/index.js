@@ -222,7 +222,7 @@ export function launch(app, state, onComplete) {
     setTimeout(()=>{
       showStarResult(root,{stars,title:titles[stars],
         lines:[`Customers served: ${served}`,`Happiness: ${happiness}%`,`Score: ${score}`,stars<3?'Pre-cache items before customers arrive!':'Perfect prediction caching!'],
-        coins,color:'#ffd700',onContinue:(s)=>{cleanup();onComplete(s,coins);}});
+        coins,color:'#ffd700',onContinue: (action,s) => { cleanup(); if(action!=='retry') onComplete(s,coins); else launch(app,state,onComplete); }});
     },600);
   }
 

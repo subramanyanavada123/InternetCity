@@ -227,7 +227,7 @@ export function launch(app, state, onComplete) {
           '📱 Your phone has 15 billion gates!',
         ],
         coins,
-        onContinue: () => { cleanup(); onComplete(stars, coins); },
+        onContinue: (action) => { cleanup(); if(action!=='retry') onComplete(stars,coins); else launch(app,state,onComplete); },
       });
     } else {
       loadLevel(levelIdx);

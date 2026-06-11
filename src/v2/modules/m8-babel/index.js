@@ -339,7 +339,7 @@ export function launch(app, state, onComplete) {
             '💡 Engineers use OSI to debug: "Is this a Layer 3 routing problem?"',
           ],
           coins,color:'#46f0c0',
-          onContinue:s=>{cleanup();onComplete(s,coins);}
+          onContinue:(action,s)=>{ cleanup(); if(action!=='retry') onComplete(s,coins); else launch(app,state,onComplete); }
         });
       },500);
     }

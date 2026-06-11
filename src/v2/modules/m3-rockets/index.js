@@ -453,7 +453,7 @@ export function launch(app, state, onComplete) {
       ],
       coins,
       color: '#c9b6ff',
-      onContinue: () => { onComplete(stars, coins); root.remove(); },
+      onContinue: (action) => { if(action!=='retry'){ onComplete(stars,coins); root.remove(); } else { root.remove(); launch(app,state,onComplete); } },
     });
   }
 

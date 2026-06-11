@@ -354,7 +354,7 @@ export function launch(app, state, onComplete) {
           '📡 Redundancy = multiple paths = fault-tolerant network',
         ],
         coins:totalCoins, color:'#ffd700',
-        onContinue:(s)=>{ cleanup(); onComplete(s,totalCoins); }
+        onContinue: (action,s) => { cleanup(); if(action!=='retry') onComplete(s,totalCoins); else launch(app,state,onComplete); }
       });
     }, 2000);
   }

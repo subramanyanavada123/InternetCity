@@ -315,6 +315,6 @@ export function showStarResult(parent, { stars, maxStars = 3, title, lines = [],
     -webkit-tap-highlight-color:transparent;
   `;
   btn.textContent = stars >= 2 ? t('btn.continue') : t('btn.retry');
-  btn.addEventListener('click', () => { card.remove(); onContinue(stars); });
+  btn.addEventListener('click', () => { card.remove(); onContinue(stars < 2 ? 'retry' : 'continue', stars); });
   card.body.appendChild(btn);
 }

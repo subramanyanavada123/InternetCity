@@ -723,7 +723,7 @@ export function launch(app, state, onComplete) {
         ],
         coins: coinsEarned,
         color: '#46f0c0',
-        onContinue: (s) => { cleanup(); onComplete(s, coinsEarned); },
+        onContinue: (action,s) => { cleanup(); if(action!=='retry') onComplete(s,coinsEarned); else launch(app,state,onComplete); },
       });
     }, 600);
   }

@@ -170,7 +170,7 @@ export function launch(app, state, onComplete) {
       lines: [`Your route: ${playerLen} steps`, `Optimal: ${OPTIMAL_LEN} steps`,
         stars<2 ? 'Find a shorter path!' : stars<3 ? 'Nearly optimal!' : 'Shortest path found!'],
       coins, color: '#ffd700',
-      onContinue: (s) => { cleanup(); onComplete(s, coins); },
+      onContinue: (action,s) => { cleanup(); if(action!=='retry') onComplete(s,coins); else launch(app,state,onComplete); },
     });
   }
 

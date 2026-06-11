@@ -215,7 +215,7 @@ export function launch(app, state, onComplete) {
         '📦 Used in every database: MongoDB, MySQL...',
       ],
       coins,
-      onContinue: () => { cleanup(); onComplete(stars, coins); },
+      onContinue: (action) => { cleanup(); if(action!=='retry') onComplete(stars,coins); else launch(app,state,onComplete); },
     });
   }
 

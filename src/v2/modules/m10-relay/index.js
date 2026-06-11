@@ -245,7 +245,7 @@ export function launch(app, state, onComplete) {
       stars, coins, color:'#46f0c0',
       title:['','Reassembled!','Almost Perfect!','Flawless!'][stars],
       lines:[`Wrong placements: ${wrongAttempts}`,'💡 This is TCP/IP packet fragmentation & reassembly!','Data splits into packets, travels any path, then','arrives out-of-order and gets reassembled.'],
-      onContinue:()=>{ cleanup(); onComplete(stars,coins); },
+      onContinue: (action) => { cleanup(); if(action!=='retry') onComplete(stars,coins); else launch(app,state,onComplete); },
     }),1200);
   }
 
