@@ -16,6 +16,9 @@ function getModules() {
     { id: 10, title: t('m10.title'), emoji: '🏃', color: '#00cec9', sub: t('m10.sub'), bg: '#001a1a' },
     { id: 11, title: t('m11.title'), emoji: '💰', color: '#e17055', sub: t('m11.sub'), bg: '#1a0800' },
     { id: 12, title: t('m12.title'), emoji: '⏱️', color: '#a29bfe', sub: t('m12.sub'), bg: '#08001a' },
+    { id: 13, title: t('m13.title'), emoji: '🏎️', color: '#74c0fc', sub: t('m13.sub'), bg: '#000d1a' },
+    { id: 14, title: t('m14.title'), emoji: '⚡', color: '#ffd43b', sub: t('m14.sub'), bg: '#1a1800' },
+    { id: 15, title: t('m15.title'), emoji: '🌳', color: '#69db7c', sub: t('m15.sub'), bg: '#001a00' },
   ];
 }
 
@@ -136,7 +139,7 @@ export function showHome(app, state, onSelect) {
       <div class="coin-display" style="flex-shrink:0;">🪙 ${state.coins}</div>
     </div>
     <div style="font-size:12px;color:#8aa6b4;margin-top:4px;margin-bottom:20px;">
-      ${progressText}${completedCount === 12 ? ' 🏆' : ''}
+      ${progressText}${completedCount >= 15 ? ' 🏆' : ''}
     </div>
     <div id="module-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(190px,100%),1fr));gap:12px;"></div>
   `;

@@ -30,6 +30,9 @@ async function loadModule(id) {
     10: () => import('./modules/m10-relay/index.js'),
     11: () => import('./modules/m11-auction/index.js'),
     12: () => import('./modules/m12-timewarp/index.js'),
+    13: () => import('./modules/m13-sorting/index.js'),
+    14: () => import('./modules/m14-gates/index.js'),
+    15: () => import('./modules/m15-bst/index.js'),
   };
   const loader = map[id];
   if (!loader) return navigate('home');
