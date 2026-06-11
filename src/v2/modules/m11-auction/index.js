@@ -110,7 +110,7 @@ export function launch(app, state, onComplete) {
     color:#ffb347;font-size:13px;font-weight:700;cursor:pointer;
     padding:6px 12px;font-family:inherit;
   `;
-  backBtn.textContent = '← Missions';
+  backBtn.textContent = t('btn.back');
   backBtn.addEventListener('click', () => { cleanup(); onComplete(0, 0); });
   root.appendChild(backBtn);
 
@@ -445,7 +445,7 @@ export function launch(app, state, onComplete) {
 
   showLessonBanner(root, {
     concept: t('m11.concept'),
-    detail: 'Networks share limited bandwidth between many users. Prioritising critical services keeps the network fair and reliable.',
+    detail: t('m11.banner'),
     color: '#e17055',
   });
 

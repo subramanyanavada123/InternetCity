@@ -72,6 +72,26 @@ const STRINGS = {
     'm11.howto': 'Bid in the auction to allocate bandwidth to users. Fairest distribution wins more stars.',
     'm12.concept': 'Latency: Every cable and router adds delay. A signal from New York to Tokyo travels ~11,000 km of fiber — that takes ~55ms just for physics! CDNs place servers near users to cut latency.',
     'm12.howto': 'Click cities to build a route from 📡 source to 🎯 destination. Place ⚡ boosters on slow segments. Beat the ms target to win!',
+    // Lesson banner detail lines (shown during gameplay)
+    'm1.banner': 'Nodes = devices. Edges = cables. N nodes need N−1 edges to connect. More edges = redundancy = fault tolerance.',
+    'm2.banner': 'More lanes on a pipe = more packets at once. Tap congested pipes to upgrade!',
+    'm3.banner': 'Networks prioritise critical traffic (VoIP, video) over bulk data. This is called QoS — Quality of Service.',
+    'm4.banner': 'Real internet cables break. Redundancy = extra backup paths so data still flows around failures.',
+    'm5.banner': 'Firewalls inspect every packet and block threats. Real or fake — a firewall decides in milliseconds.',
+    'm6.banner': 'Networks slow down when too much data flows through one link. Routing spreads the load.',
+    'm7.banner': 'Routers find the fastest route using graph algorithms. Fewer hops = lower latency.',
+    'm8.banner': 'Every network message travels through 7 layers — Physical → Data Link → Network → Transport → Session → Presentation → Application.',
+    'm9.banner': 'Caches store frequently used data close to the CPU. When full, the Least Recently Used item is evicted.',
+    'm10.banner': 'Large messages split into packets, travel different paths, then reassemble in order at the destination — that\'s TCP/IP.',
+    'm11.banner': 'Networks share limited bandwidth between many users. Prioritising critical services keeps the network fair and reliable.',
+    'm12.banner': 'Latency = how long data takes to travel. Routing via nearby servers reduces delay. Used in CDNs worldwide.',
+    // Result screen shared labels
+    'result.delivered': 'Delivered',
+    'result.dropped': 'Dropped',
+    'result.pools': 'Pools filled',
+    'result.bandwidth': '💡 Bandwidth = lanes on a highway.',
+    'result.morelanes': 'More lanes = more packets at once = no drops.',
+    'result.isps': '📡 Real ISPs upgrade links exactly this way!',
   },
   kn: {
     // Home screen
@@ -143,6 +163,26 @@ const STRINGS = {
     'm11.howto': 'ಹರಾಜಿನಲ್ಲಿ ಬ್ಯಾಂಡ್‌ವಿಡ್ತ್ ಹಂಚಿ. ನ್ಯಾಯಯುತ ಹಂಚಿಕೆ = ಹೆಚ್ಚು ನಕ್ಷತ್ರ.',
     'm12.concept': 'ಲೇಟೆನ್ಸಿ: ಪ್ರತಿ ಕೇಬಲ್ ತಡ ಸೇರಿಸುತ್ತದೆ. ನ್ಯೂಯಾರ್ಕ್-ಟೋಕ್ಯೋ ~55ms. CDN ಹತ್ತಿರದ ಸರ್ವರ್ ತಡ ಕಡಿಮೆ ಮಾಡುತ್ತದೆ.',
     'm12.howto': 'ಮೂಲ 📡 ಇಂದ ಗಮ್ಯ 🎯 ಗೆ ರಿಲೇ ನಗರಗಳ ಮೂಲಕ ರೂಟ್ ನಿರ್ಮಿಸಿ. ms ಗುರಿ ತಲುಪಿ!',
+    // Lesson banner detail lines (shown during gameplay)
+    'm1.banner': 'ನೋಡ್ = ಸಾಧನ. ಅಂಚು = ಕೇಬಲ್. N ನೋಡ್‌ಗಳಿಗೆ N−1 ಅಂಚು ಬೇಕು. ಹೆಚ್ಚು ಅಂಚು = ತಪ್ಪು ನಿರ್ವಹಣೆ.',
+    'm2.banner': 'ಹೆಚ್ಚು ಲೇನ್ = ಒಮ್ಮೆಗೆ ಹೆಚ್ಚು ಪ್ಯಾಕೆಟ್. ದಟ್ಟ ಪೈಪ್ ತಟ್ಟಿ ಅಪ್‌ಗ್ರೇಡ್ ಮಾಡಿ!',
+    'm3.banner': 'ನೆಟ್‌ವರ್ಕ್ ತುರ್ತು ಟ್ರಾಫಿಕ್‌ಗೆ ಆದ್ಯತೆ ನೀಡುತ್ತದೆ. ಇದನ್ನು QoS ಎನ್ನುತ್ತಾರೆ.',
+    'm4.banner': 'ನಿಜ ಇಂಟರ್ನೆಟ್ ಕೇಬಲ್ ಮುರಿಯುತ್ತವೆ. ಬ್ಯಾಕಪ್ ದಾರಿಗಳು ಡೇಟಾ ಹರಿಯಲು ಸಹಾಯ ಮಾಡುತ್ತವೆ.',
+    'm5.banner': 'ಫೈರ್‌ವಾಲ್ ಪ್ರತಿ ಪ್ಯಾಕೆಟ್ ಪರೀಕ್ಷಿಸಿ ಬೆದರಿಕೆ ತಡೆಯುತ್ತದೆ. ಮಿಲಿಸೆಕೆಂಡ್‌ನಲ್ಲಿ ನಿರ್ಧರಿಸುತ್ತದೆ.',
+    'm6.banner': 'ಒಂದೇ ಲಿಂಕ್‌ನಲ್ಲಿ ಹೆಚ್ಚು ಡೇಟಾ = ನಿಧಾನ. ಹೊರೆ ಹಂಚಿಕೆ = ವೇಗ.',
+    'm7.banner': 'ರೂಟರ್‌ಗಳು ಗ್ರಾಫ್ ಅಲ್ಗಾರಿದಮ್ ಬಳಸಿ ವೇಗದ ದಾರಿ ಹುಡುಕುತ್ತವೆ. ಕಡಿಮೆ ಹಾಪ್ = ಕಡಿಮೆ ತಡ.',
+    'm8.banner': 'ಪ್ರತಿ ಸಂದೇಶ 7 ಪದರಗಳ ಮೂಲಕ ಹೋಗುತ್ತದೆ — ಭೌತಿಕ → ಡೇಟಾ ಲಿಂಕ್ → ನೆಟ್‌ವರ್ಕ್ → ಟ್ರಾನ್ಸ್‌ಪೋರ್ಟ್ → ಸೆಷನ್ → ಪ್ರೆಸೆಂಟೇಶನ್ → ಅಪ್ಲಿಕೇಶನ್.',
+    'm9.banner': 'ಕ್ಯಾಷ್ CPU ಹತ್ತಿರ ಹೆಚ್ಚು ಬಳಸುವ ಡೇಟಾ ಇಡುತ್ತದೆ. ತುಂಬಿದಾಗ ಕಡಿಮೆ ಬಳಕೆಯ ಡೇಟಾ ತೆಗೆಯುತ್ತದೆ.',
+    'm10.banner': 'ದೊಡ್ಡ ಸಂದೇಶ ಪ್ಯಾಕೆಟ್‌ಗಳಾಗಿ ವಿಭಜಿಸಿ ಬೇರೆ ದಾರಿಯಲ್ಲಿ ಹೋಗಿ ಕ್ರಮದಲ್ಲಿ ಜೋಡಿಸುತ್ತವೆ — TCP/IP.',
+    'm11.banner': 'ನೆಟ್‌ವರ್ಕ್ ಸೀಮಿತ ಬ್ಯಾಂಡ್‌ವಿಡ್ತ್ ಅನ್ನು ಅನೇಕ ಬಳಕೆದಾರರಿಗೆ ಹಂಚುತ್ತದೆ. ನ್ಯಾಯಯುತ ಹಂಚಿಕೆ ಮುಖ್ಯ.',
+    'm12.banner': 'ಲೇಟೆನ್ಸಿ = ಡೇಟಾ ಪ್ರಯಾಣ ಮಾಡಲು ತೆಗೆದ ಸಮಯ. CDN ಹತ್ತಿರದ ಸರ್ವರ್ ತಡ ಕಡಿಮೆ ಮಾಡುತ್ತದೆ.',
+    // Result screen shared labels
+    'result.delivered': 'ತಲುಪಿಸಿದ',
+    'result.dropped': 'ಬಿದ್ದ',
+    'result.pools': 'ತುಂಬಿದ ಕೊಳಗಳು',
+    'result.bandwidth': '💡 ಬ್ಯಾಂಡ್‌ವಿಡ್ತ್ = ಹೆದ್ದಾರಿಯ ಲೇನ್‌ಗಳು.',
+    'result.morelanes': 'ಹೆಚ್ಚು ಲೇನ್ = ಒಮ್ಮೆಗೆ ಹೆಚ್ಚು ಪ್ಯಾಕೆಟ್ = ಡ್ರಾಪ್ ಇಲ್ಲ.',
+    'result.isps': '📡 ನಿಜ ISP ಗಳು ನಿಖರವಾಗಿ ಈ ರೀತಿ ಲಿಂಕ್ ಅಪ್‌ಗ್ರೇಡ್ ಮಾಡುತ್ತವೆ!',
   },
 };
 

@@ -319,7 +319,7 @@ export function launch(app, state, onComplete) {
 
   showLessonBanner(root, {
     concept: t('m4.concept'),
-    detail: 'Real internet cables break. Redundancy = extra backup paths so data still flows around failures.',
+    detail: t('m4.banner'),
     color: '#c9b6ff',
   });
 

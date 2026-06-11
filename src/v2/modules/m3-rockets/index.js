@@ -486,7 +486,7 @@ export function launch(app, state, onComplete) {
 
   showLessonBanner(root, {
     concept: t('m3.concept'),
-    detail: 'Networks prioritise critical traffic (VoIP, video) over bulk data. This is called QoS — Quality of Service.',
+    detail: t('m3.banner'),
     color: '#ff6b35',
   });
 

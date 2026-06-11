@@ -117,7 +117,7 @@ export function launch(app, state, onComplete) {
     color:#46f0c0;font-size:13px;font-weight:700;cursor:pointer;
     padding:6px 12px;font-family:inherit;pointer-events:auto;
   `;
-  backBtn.textContent = '← Missions';
+  backBtn.textContent = t('btn.back');
   backBtn.addEventListener('click', () => { cleanup(); onComplete(0, 0); });
   root.appendChild(backBtn);
 
@@ -731,7 +731,7 @@ export function launch(app, state, onComplete) {
   // ── Init & start ──────────────────────────────────────────────────────────
   showLessonBanner(root, {
     concept: t('m6.concept'),
-    detail: 'Networks slow down when too much data flows through one link. Routing spreads the load.',
+    detail: t('m6.banner'),
     color: '#ff3860',
   });
 

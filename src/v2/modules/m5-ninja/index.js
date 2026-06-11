@@ -88,7 +88,7 @@ export function launch(app, state, onComplete) {
     background:rgba(0,0,0,0.5);border:1px solid #46f0c066;border-radius:10px;
     color:#46f0c0;font-size:13px;font-weight:700;cursor:pointer;
     padding:6px 12px;font-family:inherit;pointer-events:auto;`;
-  backBtn.textContent = '← Missions';
+  backBtn.textContent = t('btn.back');
   backBtn.addEventListener('click', () => { cleanup(); onComplete(0, 0); });
   root.appendChild(backBtn);
 
@@ -607,7 +607,7 @@ export function launch(app, state, onComplete) {
   // ── Init ──────────────────────────────────────────────────────────────────
   showLessonBanner(root, {
     concept: t('m5.concept'),
-    detail: 'Firewalls inspect every packet and block threats. Real or fake — a firewall decides in milliseconds.',
+    detail: t('m5.banner'),
     color: '#46f0c0',
   });
 

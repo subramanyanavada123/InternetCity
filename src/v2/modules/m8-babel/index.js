@@ -59,7 +59,7 @@ export function launch(app, state, onComplete) {
   const hud = makeHUD(root, { color:'#46f0c0' });
   const backBtn = document.createElement('button');
   backBtn.style.cssText = 'position:absolute;top:8px;left:16px;z-index:70;background:rgba(0,0,0,0.5);border:1px solid #46f0c066;border-radius:10px;color:#46f0c0;font-size:13px;font-weight:700;cursor:pointer;padding:6px 12px;font-family:inherit;';
-  backBtn.textContent = '← Missions';
+  backBtn.textContent = t('btn.back');
   backBtn.onclick = () => { cleanup(); onComplete(0,0); };
   root.appendChild(backBtn);
 
@@ -347,7 +347,7 @@ export function launch(app, state, onComplete) {
 
   showLessonBanner(root, {
     concept: t('m8.concept'),
-    detail: 'Every network message travels through 7 layers — Physical → Data Link → Network → Transport → Session → Presentation → Application.',
+    detail: t('m8.banner'),
     color: '#ff9f43',
   });
 

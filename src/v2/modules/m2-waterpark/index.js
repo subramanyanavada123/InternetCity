@@ -62,7 +62,7 @@ export function launch(app, state, onComplete) {
     background:rgba(0,0,0,0.5);border:1px solid #44ccff66;border-radius:10px;
     color:#44ccff;font-size:13px;font-weight:700;cursor:pointer;
     padding:6px 12px;font-family:inherit;`;
-  backBtn.textContent = '← Missions';
+  backBtn.textContent = t('btn.back');
   backBtn.addEventListener('click', () => { cleanup(); onComplete(0,0); });
   root.appendChild(backBtn);
 
@@ -504,8 +504,8 @@ export function launch(app, state, onComplete) {
 
   // ── Lesson + Intro ────────────────────────────────────────────────────────
   showLessonBanner(root,{
-    concept: 'Bandwidth = Lanes',
-    detail: 'More lanes on a pipe = more packets at once. Tap congested pipes to upgrade!',
+    concept: t('m2.title'),
+    detail: t('m2.banner'),
     color: '#44ccff',
   });
 

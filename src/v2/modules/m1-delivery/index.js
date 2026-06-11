@@ -81,7 +81,7 @@ export function launch(app, state, onComplete) {
     background:rgba(0,0,0,0.5);border:1px solid #ffd70066;border-radius:10px;
     color:#ffd700;font-size:13px;font-weight:700;cursor:pointer;
     padding:6px 12px;font-family:inherit;pointer-events:auto;`;
-  backBtn.textContent = '← Missions';
+  backBtn.textContent = t('btn.back');
   backBtn.addEventListener('click', () => { cleanup(); onComplete(0,0); });
   root.appendChild(backBtn);
 
@@ -582,8 +582,8 @@ export function launch(app, state, onComplete) {
 
   // ── Init ──────────────────────────────────────────────────────────────────
   showLessonBanner(root,{
-    concept:'Graph Theory & Network Design',
-    detail:'Nodes = devices. Edges = cables. N nodes need N−1 edges to connect. More edges = redundancy = fault tolerance.',
+    concept: t('m1.title'),
+    detail: t('m1.banner'),
     color:'#ffd700',
   });
 

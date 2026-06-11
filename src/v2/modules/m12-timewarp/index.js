@@ -40,7 +40,7 @@ export function launch(app, state, onComplete) {
   backBtn.style.cssText = `position:absolute;top:8px;left:16px;z-index:70;
     background:rgba(0,0,0,0.5);border:1px solid #a29bfe66;border-radius:10px;
     color:#a29bfe;font-size:13px;font-weight:700;cursor:pointer;padding:6px 12px;font-family:inherit;`;
-  backBtn.textContent = '← Missions';
+  backBtn.textContent = t('btn.back');
   backBtn.addEventListener('click', () => { cleanup(); onComplete(0, 0); });
   root.appendChild(backBtn);
 
@@ -286,7 +286,7 @@ export function launch(app, state, onComplete) {
 
   showLessonBanner(root, {
     concept: t('m12.concept'),
-    detail: 'Latency = how long data takes to travel. Routing via nearby servers reduces delay. Used in CDNs worldwide.',
+    detail: t('m12.banner'),
     color: '#a29bfe',
   });
 

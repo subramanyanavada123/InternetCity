@@ -19,7 +19,7 @@ export function launch(app, state, onComplete) {
 
   const backBtn = document.createElement('button');
   backBtn.style.cssText=`position:absolute;top:8px;left:16px;z-index:70;background:rgba(0,0,0,0.55);border:1px solid #ffd70055;border-radius:10px;color:#ffd700;font-size:13px;font-weight:700;cursor:pointer;padding:6px 12px;font-family:inherit;`;
-  backBtn.textContent='← Missions';
+  backBtn.textContent = t('btn.back');
   backBtn.addEventListener('click',()=>{ cleanup(); onComplete(0,0); });
   root.appendChild(backBtn);
 
@@ -245,7 +245,7 @@ export function launch(app, state, onComplete) {
 
   showLessonBanner(root, {
     concept: t('m9.concept'),
-    detail: 'Caches store frequently used data close to the CPU. When full, the Least Recently Used item is evicted.',
+    detail: t('m9.banner'),
     color: '#fd79a8',
   });
 
