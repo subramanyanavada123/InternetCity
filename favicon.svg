@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Background -->
+  <rect width="32" height="32" rx="6" fill="#0a0a1a"/>
+  <!-- City buildings -->
+  <rect x="2"  y="18" width="5" height="12" fill="#c9b6ff"/>
+  <rect x="3"  y="16" width="3" height="2"  fill="#c9b6ff"/>
+  <rect x="8"  y="14" width="6" height="16" fill="#44ccff"/>
+  <rect x="9"  y="12" width="4" height="2"  fill="#44ccff"/>
+  <rect x="15" y="10" width="7" height="20" fill="#ffd700"/>
+  <rect x="16" y="8"  width="5" height="2"  fill="#ffd700"/>
+  <rect x="23" y="16" width="7" height="14" fill="#69db7c"/>
+  <rect x="24" y="14" width="5" height="2"  fill="#69db7c"/>
+  <!-- Antenna on tallest building -->
+  <line x1="18" y1="8" x2="18" y2="4" stroke="#ffd700" stroke-width="1.5"/>
+  <circle cx="18" cy="3.5" r="1.5" fill="#ffd700"/>
+  <!-- Windows -->
+  <rect x="3.5" y="19" width="1.5" height="1.5" fill="#ffe87a" opacity="0.9"/>
+  <rect x="3.5" y="22" width="1.5" height="1.5" fill="#ffe87a" opacity="0.9"/>
+  <rect x="9.5" y="15" width="1.5" height="2"   fill="#ffe87a" opacity="0.9"/>
+  <rect x="12"  y="15" width="1.5" height="2"   fill="#ffe87a" opacity="0.9"/>
+  <rect x="9.5" y="19" width="1.5" height="2"   fill="#ffe87a" opacity="0.9"/>
+  <rect x="12"  y="19" width="1.5" height="2"   fill="#ffe87a" opacity="0.9"/>
+  <rect x="16.5"y="11" width="1.5" height="2"   fill="#ffe87a" opacity="0.9"/>
+  <rect x="19"  y="11" width="1.5" height="2"   fill="#ffe87a" opacity="0.9"/>
+  <rect x="16.5"y="15" width="1.5" height="2"   fill="#ffe87a" opacity="0.9"/>
+  <rect x="19"  y="15" width="1.5" height="2"   fill="#ffe87a" opacity="0.9"/>
+  <rect x="16.5"y="19" width="1.5" height="2"   fill="#ffe87a" opacity="0.9"/>
+  <rect x="19"  y="19" width="1.5" height="2"   fill="#ffe87a" opacity="0.9"/>
+  <rect x="24.5"y="17" width="1.5" height="2"   fill="#ffe87a" opacity="0.9"/>
+  <rect x="27"  y="17" width="1.5" height="2"   fill="#ffe87a" opacity="0.9"/>
+  <rect x="24.5"y="21" width="1.5" height="2"   fill="#ffe87a" opacity="0.9"/>
+  <!-- Ground -->
+  <rect x="0" y="30" width="32" height="2" fill="#1a1a2e"/>
+  <!-- Network dots connecting buildings -->
+  <circle cx="5"  cy="13" r="1.5" fill="#ff6b35" opacity="0.8"/>
+  <circle cx="11" cy="9"  r="1.5" fill="#ff6b35" opacity="0.8"/>
+  <circle cx="18" cy="6"  r="1.5" fill="#ffd700"/>
+  <line x1="5" y1="13" x2="11" y2="9"  stroke="#ff6b3566" stroke-width="1"/>
+  <line x1="11" y1="9" x2="18" y2="6"  stroke="#ff6b3566" stroke-width="1"/>
+</svg>
