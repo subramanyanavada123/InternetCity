@@ -2,22 +2,56 @@ import { makeGameShell, makeHUD, showStarResult, showIntro, showLessonBanner } f
 import { sfx } from '../../shared/sfx.js';
 import { t } from '../../shared/i18n.js';
 
-const MAZE = [
-  [0,0,1,0,0,0,1,0,0],
-  [0,1,1,0,1,0,1,0,1],
-  [0,0,0,0,1,0,0,0,0],
-  [1,1,0,1,1,1,0,1,0],
-  [0,0,0,0,0,0,0,1,0],
-  [0,1,1,1,0,1,0,0,0],
-  [0,0,0,1,0,1,1,1,0],
-  [1,0,1,1,0,0,0,1,0],
-  [0,0,0,0,0,1,0,0,0],
+// Three different 9×9 maze layouts — each solvable with distinct optimal paths
+const LAYOUTS = [
+  {
+    maze: [
+      [0,0,1,0,0,0,1,0,0],
+      [0,1,1,0,1,0,1,0,1],
+      [0,0,0,0,1,0,0,0,0],
+      [1,1,0,1,1,1,0,1,0],
+      [0,0,0,0,0,0,0,1,0],
+      [0,1,1,1,0,1,0,0,0],
+      [0,0,0,1,0,1,1,1,0],
+      [1,0,1,1,0,0,0,1,0],
+      [0,0,0,0,0,1,0,0,0],
+    ],
+    waypoints: [[2,0],[4,4],[6,8]],
+  },
+  {
+    maze: [
+      [0,0,0,1,0,0,0,1,0],
+      [1,1,0,1,0,1,0,0,0],
+      [0,0,0,0,0,1,1,1,0],
+      [0,1,1,1,0,0,0,1,0],
+      [0,0,0,1,1,1,0,1,0],
+      [1,1,0,0,0,1,0,0,0],
+      [0,1,1,1,0,1,1,1,0],
+      [0,0,0,1,0,0,0,0,0],
+      [0,1,0,0,0,1,1,0,0],
+    ],
+    waypoints: [[0,4],[3,5],[7,4]],
+  },
+  {
+    maze: [
+      [0,0,0,0,1,0,0,0,0],
+      [0,1,1,0,1,0,1,1,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,1,0,1,1,1,0,0,0],
+      [0,0,0,1,0,0,0,1,1],
+      [1,1,0,1,0,1,0,0,0],
+      [0,0,0,0,0,1,1,1,0],
+      [0,1,1,1,0,0,0,1,0],
+      [0,0,0,1,1,0,0,0,0],
+    ],
+    waypoints: [[1,4],[4,4],[6,0]],
+  },
 ];
+
 const ROWS = 9, COLS = 9;
 const START = [0, 0], END = [8, 8];
-const WAYPOINTS = [[2, 0], [4, 4], [6, 8]];
 
-function bfs(sr, sc, er, ec) {
+function bfs(maze, sr, sc, er, ec) {
   if (sr === er && sc === ec) return [[sr, sc]];
   const visited = Array.from({length:ROWS}, () => new Array(COLS).fill(false));
   const prev = Array.from({length:ROWS}, () => new Array(COLS).fill(null));
@@ -29,7 +63,7 @@ function bfs(sr, sc, er, ec) {
     const [r, c] = queue.shift();
     for (const [dr, dc] of dirs) {
       const nr = r+dr, nc = c+dc;
-      if (nr<0||nr>=ROWS||nc<0||nc>=COLS||visited[nr][nc]||MAZE[nr][nc]===1) continue;
+      if (nr<0||nr>=ROWS||nc<0||nc>=COLS||visited[nr][nc]||maze[nr][nc]===1) continue;
       visited[nr][nc] = true; prev[nr][nc] = [r, c];
       if (nr===er && nc===ec) { found = true; break outer; }
       queue.push([nr, nc]);
@@ -41,11 +75,11 @@ function bfs(sr, sc, er, ec) {
   return path;
 }
 
-function optimalPath() {
-  const stops = [START, ...WAYPOINTS, END];
+function optimalPath(maze, waypoints) {
+  const stops = [START, ...waypoints, END];
   let full = [stops[0]];
   for (let i = 0; i < stops.length-1; i++) {
-    const seg = bfs(stops[i][0],stops[i][1],stops[i+1][0],stops[i+1][1]);
+    const seg = bfs(maze, stops[i][0],stops[i][1],stops[i+1][0],stops[i+1][1]);
     if (!seg) return null;
     full = full.concat(seg.slice(1));
   }
@@ -76,15 +110,22 @@ export function launch(app, state, onComplete) {
   backBtn.addEventListener('click', () => { cleanup(); onComplete(0, 0); });
   root.appendChild(backBtn);
 
-  const OPTIMAL = optimalPath();
+  // Pick a random layout each play
+  const layout = LAYOUTS[Math.floor(Math.random() * LAYOUTS.length)];
+  const MAZE = layout.maze;
+  const WAYPOINTS = layout.waypoints;
+
+  const OPTIMAL = optimalPath(MAZE, WAYPOINTS);
   const OPTIMAL_LEN = OPTIMAL ? OPTIMAL.length - 1 : 99;
   let playerPath = [START];
-  const wpCollected = [false, false, false];
-  let phase = 'drawing'; // 'drawing' | 'animating' | 'done'
+  const wpCollected = WAYPOINTS.map(() => false);
+  let phase = 'drawing'; // 'drawing' | 'animating' | 'revealing' | 'done'
   let postmanPos = null;
   let showOptimal = false;
   let raf = null, lastTs = null;
   let animIdx = 0, animT = 0, animPath = null;
+  // BFS reveal animation state
+  let revealPath = null, revealIdx = 0, revealTimer = 0;
 
   const HUD_H = 52;
   const getCS = () => Math.floor(Math.min(W(), H()-HUD_H) / COLS);
@@ -125,8 +166,27 @@ export function launch(app, state, onComplete) {
       c.fillStyle='#ffd700'; c.globalAlpha=0.55;
       c.fillRect(x+2,y+2,cs-4,cs-4); c.globalAlpha=1;
     }
-    // Optimal path overlay
-    if (showOptimal && OPTIMAL) {
+    // BFS optimal path reveal animation (step-by-step green cells)
+    if ((phase==='revealing'||phase==='done') && revealPath) {
+      const revealed = revealPath.slice(0, revealIdx+1);
+      c.save();
+      revealed.forEach(([pr,pc]) => {
+        const {x,y}=cellToPixel(pr,pc);
+        c.fillStyle='rgba(68,255,136,0.45)';
+        c.fillRect(x+2,y+2,cs-4,cs-4);
+      });
+      // Draw green path line
+      if(revealed.length>1){
+        c.strokeStyle='#44ff88'; c.lineWidth=3;
+        c.setLineDash([6,5]); c.shadowColor='#44ff88'; c.shadowBlur=8;
+        c.beginPath();
+        revealed.forEach(([pr,pc],i)=>{ const{x,y}=cellCenter(pr,pc); i===0?c.moveTo(x,y):c.lineTo(x,y); });
+        c.stroke(); c.setLineDash([]); c.shadowBlur=0;
+      }
+      c.restore();
+    }
+    // Legacy showOptimal flag (kept for done state)
+    if (showOptimal && OPTIMAL && phase==='done') {
       c.save(); c.strokeStyle='#44ff88'; c.lineWidth=3;
       c.setLineDash([6,5]); c.shadowColor='#44ff88'; c.shadowBlur=8;
       c.beginPath();
@@ -157,6 +217,14 @@ export function launch(app, state, onComplete) {
     c.restore();
   }
 
+  function startReveal() {
+    // Animate the optimal BFS path cell by cell before showing result
+    phase = 'revealing';
+    revealPath = OPTIMAL || [];
+    revealIdx = 0;
+    revealTimer = 0;
+  }
+
   function finishGame() {
     const playerLen = playerPath.length - 1;
     let stars = 1;
@@ -179,17 +247,33 @@ export function launch(app, state, onComplete) {
     if (lastTs === null) lastTs = ts;
     const dt = Math.min((ts-lastTs)/1000, 0.1); lastTs = ts;
     const c = ctx(); c.clearRect(0, 0, W(), H());
+
+    // Advance BFS reveal animation — ~12 cells/second
+    if (phase === 'revealing' && revealPath) {
+      revealTimer += dt;
+      const targetIdx = Math.floor(revealTimer * 12);
+      if (targetIdx >= revealPath.length) {
+        revealIdx = revealPath.length - 1;
+        phase = 'done';
+        showOptimal = true;
+        setTimeout(() => finishGame(), 800);
+      } else {
+        revealIdx = targetIdx;
+      }
+    }
+
     drawMaze(ts); drawPostman(ts);
     const cnt = wpCollected.filter(Boolean).length;
     hud.setLeft('📮 Maze Post Office');
-    hud.setCenter(`📦 Waypoints: ${cnt}/3`);
+    hud.setCenter(phase==='revealing'
+      ? '🔍 Optimal route...'
+      : `📦 Waypoints: ${cnt}/${WAYPOINTS.length}`);
     if (phase === 'animating' && animPath) {
       animT += 6 * dt;
       while (animT >= 1 && animIdx < animPath.length-1) { animT -= 1; animIdx++; }
       if (animIdx >= animPath.length-1) {
         postmanPos = { row: animPath[animPath.length-1][0], col: animPath[animPath.length-1][1] };
-        phase = 'done'; showOptimal = true;
-        setTimeout(() => { showOptimal = false; finishGame(); }, 2000);
+        startReveal();
       } else {
         const [ar,ac]=animPath[animIdx], [br,bc]=animPath[animIdx+1];
         postmanPos = { row: ar+(br-ar)*animT, col: ac+(bc-ac)*animT };
@@ -217,6 +301,7 @@ export function launch(app, state, onComplete) {
     const wi = WAYPOINTS.findIndex(([wr,wc])=>wr===r&&wc===c);
     if (wi>=0 && !wpCollected[wi]) {
       wpCollected[wi] = true; sfx.coin();
+      const rect = canvas.getBoundingClientRect();
       const {x,y}=cellCenter(r,c);
       popEmoji(root, rect.left+x, rect.top+y, '✅');
     }

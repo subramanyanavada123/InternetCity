@@ -152,7 +152,8 @@ export function showHome(app, state, onSelect) {
 
   MODULES.forEach((mod, i) => {
     const stars = state.moduleStars?.[mod.id] || 0;
-    const isUnlocked = mod.id === 1 || completed.includes(mod.id - 1) || completed.includes(mod.id);
+    // First 3 modules always unlocked so new players aren't stuck on a single gate
+    const isUnlocked = mod.id <= 3 || completed.includes(mod.id - 1) || completed.includes(mod.id);
     const card = document.createElement('div');
     card.className = 'module-card-v2' + (isUnlocked ? '' : ' locked');
     card.style.cssText = `

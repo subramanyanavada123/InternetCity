@@ -130,21 +130,38 @@ export function launch(app, state, onComplete) {
       c.shadowColor='#ffd700'; c.shadowBlur=8; c.stroke(); c.restore();
     });
 
+    // Vulnerability heatmap — only shown during build phase
+    // A building is "protected" if a backup link touches it or its parent tower
+    const protectedNodes=new Set();
+    if(phase==='build'){
+      backupLinks.forEach(({a,b})=>{ protectedNodes.add(a); protectedNodes.add(b); });
+    }
+
     // Draw buildings
     buildings.forEach(b=>{
       const on=b.alive&&online.has(b.id);
+      const vuln=phase==='build'&&!protectedNodes.has(b.id)&&!protectedNodes.has(b.towerId);
+      const prot=phase==='build'&&(protectedNodes.has(b.id)||protectedNodes.has(b.towerId));
       c.save();
-      if(on){ c.shadowColor='#c9b6ff'; c.shadowBlur=8; }
-      c.fillStyle=on?'#c9b6ff':'#333';
+      if(vuln){
+        // Pulsing red/orange glow — single point of failure
+        const pulse=0.5+0.5*Math.sin(ts/300);
+        c.shadowColor=`rgba(255,${80+pulse*60|0},0,1)`; c.shadowBlur=14+pulse*8;
+      } else if(prot){
+        c.shadowColor='#44ff88'; c.shadowBlur=12;
+      } else if(on){
+        c.shadowColor='#c9b6ff'; c.shadowBlur=8;
+      }
+      c.fillStyle=vuln?'#ff7744':prot?'#44dd88':on?'#c9b6ff':'#333';
       c.fillRect(b.x-10,b.y-14,20,28);
       for(let r=0;r<2;r++) for(let col=0;col<2;col++){
-        c.fillStyle=on?'#ffe87a':'#222';
+        c.fillStyle=vuln?'#ffd700':prot?'#c9ffda':on?'#ffe87a':'#222';
         c.fillRect(b.x-7+col*9,b.y-9+r*9,5,5);
       }
       c.restore();
       // Online indicator dot
       c.beginPath(); c.arc(b.x,b.y-20,4,0,6.28);
-      c.fillStyle=on?'#44ff88':'#ff4444'; c.fill();
+      c.fillStyle=prot?'#44ff88':vuln?'#ff5500':on?'#44ff88':'#ff4444'; c.fill();
     });
 
     // Draw towers
@@ -197,6 +214,21 @@ export function launch(app, state, onComplete) {
       c.fillStyle='rgba(0,0,0,0.65)';
       c.beginPath(); c.roundRect(w/2-160,h-52,320,36,10); c.fill();
       c.fillStyle='#ffd700'; c.fillText(msg,w/2,h-44);
+      c.restore();
+    }
+
+    // Vulnerability legend — shown during build phase
+    if(phase==='build'){
+      c.save();
+      c.font='bold 11px monospace'; c.textBaseline='middle';
+      const lx=10, ly=42;
+      // Red swatch
+      c.fillStyle='rgba(0,0,0,0.55)';
+      c.beginPath(); c.roundRect(lx-4,ly-14,160,34,8); c.fill();
+      c.fillStyle='#ff7744'; c.fillRect(lx,ly-6,10,12);
+      c.fillStyle='#ff9966'; c.textAlign='left'; c.fillText('= vulnerable',lx+14,ly);
+      c.fillStyle='#44dd88'; c.fillRect(lx,ly+14,10,12);
+      c.fillStyle='#88ffaa'; c.fillText('= protected',lx+14,ly+20);
       c.restore();
     }
 
@@ -285,16 +317,38 @@ export function launch(app, state, onComplete) {
   });
 
   // ── Click ─────────────────────────────────────────────────────────────────
+  function findBackupLinkAt(mx,my){
+    const tol=14;
+    for(let i=0;i<backupLinks.length;i++){
+      const {a,b}=backupLinks[i];
+      const na=nodeById(a),nb=nodeById(b); if(!na||!nb) continue;
+      const dx=nb.x-na.x,dy=nb.y-na.y,lenSq=dx*dx+dy*dy;
+      if(lenSq===0) continue;
+      const t=Math.max(0,Math.min(1,((mx-na.x)*dx+(my-na.y)*dy)/lenSq));
+      if(Math.hypot(mx-(na.x+t*dx),my-(na.y+t*dy))<tol) return i;
+    }
+    return -1;
+  }
+
   function handleTap(mx,my){
     if(phase!=='build') return;
     const hit=allNodes().find(n=>Math.hypot(n.x-mx,n.y-my)<36);
-    if(!hit){ selected=null; return; }
+    if(!hit){
+      // Check if tapping a backup link to remove it
+      const li=findBackupLinkAt(mx,my);
+      if(li>=0){ backupLinks.splice(li,1); sfx.fail(); }
+      selected=null; return;
+    }
     sfx.coin();
     if(!selected){ selected=hit; tutStep=Math.max(tutStep,1); return; }
     if(selected.id===hit.id){ selected=null; return; }
     const dup=backupLinks.some(l=>(l.a===selected.id&&l.b===hit.id)||(l.b===selected.id&&l.a===hit.id));
     const isCore=coreLinks.some(l=>(l.a===selected.id&&l.b===hit.id)||(l.b===selected.id&&l.a===hit.id));
-    if(!dup&&!isCore&&backupLinks.length<MAX_BL){
+    if(dup){
+      // Tapping both ends of an existing backup link removes it
+      const li=backupLinks.findIndex(l=>(l.a===selected.id&&l.b===hit.id)||(l.b===selected.id&&l.a===hit.id));
+      backupLinks.splice(li,1); sfx.fail();
+    } else if(!isCore&&backupLinks.length<MAX_BL){
       backupLinks.push({a:selected.id,b:hit.id});
       sfx.pop(); tutStep=2;
     } else { sfx.block(); }

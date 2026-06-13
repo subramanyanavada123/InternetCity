@@ -177,7 +177,8 @@ export function launch(app, state, onComplete) {
       txt.textContent=FRAGMENTS[fi]; card.appendChild(txt);
       card.addEventListener('mouseenter',()=>{ if(!card.dataset.placed) card.style.transform='scale(1.07)'; });
       card.addEventListener('mouseleave',()=>{ card.style.transform=''; });
-      card.addEventListener('dragstart', e=>{ draggedCard=e.currentTarget; e.currentTarget.style.opacity='.5'; e.dataTransfer.effectAllowed='move'; });
+      card.addEventListener('dragstart', e=>{ draggedCard=card; e.currentTarget.style.opacity='.5'; e.dataTransfer.effectAllowed='move'; });
+      card.addEventListener('dragend', ()=>{ card.style.opacity='1'; });
       srcRow.appendChild(card); cards.push(card);
     }
 
@@ -210,7 +211,9 @@ export function launch(app, state, onComplete) {
     slot.style.borderColor='#46f0c044'; slot.style.background='#002020';
     if (!draggedCard||slot.dataset.filled) { if(draggedCard) draggedCard.style.opacity='1'; draggedCard=null; return; }
     draggedCard.style.opacity='1';
-    const ok = parseInt(slot.dataset.slot)===parseInt(draggedCard.dataset.bib);
+    // slot 1 = fragment position 1 in message, card.dataset.fragIdx is the fragment index (0-5)
+    // Fragment i belongs in slot i+1 (correct order = original message order)
+    const ok = parseInt(slot.dataset.slot) === parseInt(draggedCard.dataset.fragIdx) + 1;
     if (ok) {
       slot.dataset.filled='1'; draggedCard.dataset.placed='1';
       draggedCard.draggable=false; draggedCard.style.cursor='default';

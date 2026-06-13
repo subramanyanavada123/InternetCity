@@ -144,6 +144,9 @@ export function launch(app, state, onComplete) {
   let arrayType = 0;   // index into ARRAY_TYPES
   let roundsDone = 0;
   let totalStars = 0;
+  let prediction = null;   // name of algo player picked
+  let predictionCorrect = false;
+  let finishCount = 0;
 
   // ── UI controls ──────────────────────────────────────────────────────────
   const ctrlRow = document.createElement('div');
@@ -191,6 +194,9 @@ export function launch(app, state, onComplete) {
     cancelAnimationFrame(rafId);
     running = false;
     winner = null;
+    prediction = null;
+    predictionCorrect = false;
+    finishCount = 0;
     const src = ARRAY_TYPES[arrayType].gen();
     racers = ALGOS.map(a => ({
       name: a.name, color: a.color,
@@ -206,20 +212,74 @@ export function launch(app, state, onComplete) {
     lastNow = null;
   }
 
+  function showPredictionModal(onConfirm) {
+    cancelAnimationFrame(rafId);
+    const modal = document.createElement('div');
+    modal.style.cssText = `position:absolute;inset:0;background:rgba(10,10,26,0.92);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+      z-index:80;`;
+
+    const title = document.createElement('div');
+    title.style.cssText = 'font-size:17px;font-weight:700;color:#74c0fc;margin-bottom:4px;text-align:center;';
+    title.textContent = '🔮 Which algorithm wins?';
+    modal.appendChild(title);
+
+    const sub = document.createElement('div');
+    sub.style.cssText = 'font-size:12px;color:#8aa6b4;margin-bottom:8px;text-align:center;';
+    sub.textContent = `Array type: ${ARRAY_TYPES[arrayType].label} — make your prediction!`;
+    modal.appendChild(sub);
+
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;width:min(320px,90vw);';
+    modal.appendChild(grid);
+
+    ALGOS.forEach(algo => {
+      const btn = document.createElement('button');
+      btn.style.cssText = `padding:10px 8px;border-radius:12px;border:2px solid ${algo.color}66;
+        background:${algo.color}18;color:${algo.color};font-size:13px;font-weight:700;
+        cursor:pointer;font-family:inherit;transition:border-color 0.15s,background 0.15s;`;
+      btn.textContent = algo.name;
+      btn.addEventListener('click', () => {
+        modal.remove();
+        rafId = requestAnimationFrame(idleLoop);
+        onConfirm(algo.name);
+      });
+      btn.addEventListener('mouseenter', () => { btn.style.borderColor=algo.color; btn.style.background=algo.color+'33'; });
+      btn.addEventListener('mouseleave', () => { btn.style.borderColor=algo.color+'66'; btn.style.background=algo.color+'18'; });
+      grid.appendChild(btn);
+    });
+
+    const skip = document.createElement('button');
+    skip.style.cssText = `margin-top:8px;padding:8px 20px;border-radius:10px;border:1px solid #444;
+      background:transparent;color:#666;font-size:12px;cursor:pointer;font-family:inherit;`;
+    skip.textContent = 'Skip prediction';
+    skip.addEventListener('click', () => {
+      modal.remove();
+      rafId = requestAnimationFrame(idleLoop);
+      onConfirm(null);
+    });
+    modal.appendChild(skip);
+
+    root.appendChild(modal);
+  }
+
   function startRace() {
     if (running) return;
-    running = true;
-    buildControls();
-    lastNow = null;
-    rafId = requestAnimationFrame(loop);
+    showPredictionModal((picked) => {
+      prediction = picked;
+      predictionCorrect = false;
+      running = true;
+      buildControls();
+      lastNow = null;
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(loop);
+    });
   }
 
   initRace();
   buildControls();
 
   // ── Update ─────────────────────────────────────────────────────────────────
-  let finishCount = 0;
-
   function update(dt) {
     if (!running) return;
     t_acc += dt * STEPS_PER_SEC;
@@ -264,15 +324,24 @@ export function launch(app, state, onComplete) {
     const sorted = [...racers].sort((a,b)=>a.place-b.place);
     const stars = roundsDone >= 3 ? 3 : roundsDone >= 2 ? 2 : 1;
     totalStars = Math.max(totalStars, stars);
-    const coins = [0,20,40,80][stars];
+    predictionCorrect = prediction !== null && w?.name === prediction;
+    const bonusCoins = predictionCorrect ? 15 : 0;
+    const coins = [0,20,40,80][stars] + bonusCoins;
 
     sfx.win();
+    const predLine = prediction
+      ? predictionCorrect
+        ? `🎯 Correct prediction: +${bonusCoins} bonus coins!`
+        : `❌ You predicted ${prediction} — ${w?.name} actually won`
+      : null;
+
     showStarResult(root, {
       stars: totalStars,
       color: '#74c0fc',
       title: `🏆 ${w?.name} Wins!`,
       lines: [
         `Array: ${ARRAY_TYPES[arrayType].label}`,
+        ...(predLine ? [predLine] : []),
         '─────────────────────────────',
         ...sorted.map(r => `${r.place}. ${r.name}: ${r.finishOps} ops`),
         '─────────────────────────────',

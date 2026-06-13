@@ -90,6 +90,7 @@ export function launch(app, state, onComplete) {
   let reachable=new Set(), dragFrom=null, dragPos=null, raf=null;
   let bounceSet=new Set(), flashMsgs=[];
   let round=1, totalCoins=0, roundDone=false;
+  let firstDragDone=false; // tutorial state
 
   // round-specific
   let r2Budget=0, r2Spent=0;
@@ -177,20 +178,20 @@ export function launch(app, state, onComplete) {
     if(!allConnected()||roundDone) return;
     roundDone=true;
     sfx.win();
-    const diag=diagonal(), lat=totalLatency();
-    const pct=lat/(diag*3);
-    const stars=pct<0.45?3:pct<0.65?2:1;
+    const lat=totalLatency();
     spawnConfetti();
     flashMsg('NETWORK CONNECTED! 🌐', '#ffd700', W()/2, H()/2, true);
     setTimeout(()=>{
       const mst=mstCost(buildings,buildings.length);
       const myTotal=roads.reduce((s,r)=>s+roadLen(r),0);
       const eff=Math.round((mst/myTotal)*100);
-      showBetweenRounds(1, stars,
+      // Recalibrated: 3★ = ≥80% MST efficiency, 2★ = ≥55%, 1★ = connected
+      const effStars=eff>=80?3:eff>=55?2:1;
+      showBetweenRounds(1, effStars,
         [`⏱ Total latency: ${lat}ms`, `📐 Efficiency: ${eff}% of optimal (Minimum Spanning Tree)`,
          eff>=95?'★ Near-perfect MST!':'Hint: fewer, shorter roads = better network',
          '💡 The MINIMUM path that connects all nodes uses exactly N−1 edges'],
-        startRound2
+        ()=>showRoundIntro(2, startRound2)
       );
     }, 2200);
   }
@@ -210,7 +211,7 @@ export function launch(app, state, onComplete) {
     const conn=reachable.size-1, total=buildings.length-1;
     const rem=r2Budget-r2Spent;
     const col=rem<50?'#ff6644':rem<100?'#ffdd44':'#44ff88';
-    hud.setCenter(`🏙 ${conn}/${total}  Budget: <span style="color:${col}">${Math.round(rem)}px left</span>`);
+    hud.setCenter(`🏙 ${conn}/${total}  Budget: <span style="color:${col}">${Math.round(rem)} credits left</span>`);
     const n=buildings.length, edgesUsed=roads.length;
     if(edgesUsed>=n-1){
       hud.setRight(`Edges: ${edgesUsed} (min needed: ${n-1})`);
@@ -254,11 +255,11 @@ export function launch(app, state, onComplete) {
       const stars=isMST?3:pct<75?2:1;
       totalCoins+=stars*15;
       showBetweenRounds(2, stars,
-        [`💰 Budget used: ${Math.round(r2Spent)}/${r2Budget}px (${pct}%)`,
+        [`💰 Budget used: ${Math.round(r2Spent)}/${r2Budget} credits (${pct}%)`,
          `🔗 Edges used: ${edgesUsed} (minimum needed: ${n-1})`,
          isMST?'★ PERFECT MST — you found the most efficient network!':'N nodes need exactly N−1 edges to form a spanning tree',
          '💡 MST = cheapest way to connect every node. Used in ISP cable routing!'],
-        startRound3
+        ()=>showRoundIntro(3, startRound3)
       );
     }, 2200);
   }
@@ -270,7 +271,7 @@ export function launch(app, state, onComplete) {
     // Give player 8 seconds to build before earthquakes begin
     r3Quakes=[]; r3Packets=[]; r3QTimer=0; r3EndTimer=0; r3Started=false;
     hud.setLeft('Round 3/3 — Earthquake! 🌍');
-    hud.setCenter('Build roads fast! Quake in 8s…');
+    hud.setCenter('Build roads fast! Quake in 12s…');
     hud.setRight('');
     setTimeout(()=>{
       r3Started=true;
@@ -278,7 +279,7 @@ export function launch(app, state, onComplete) {
       flashMsg('EARTHQUAKE! 💥', '#ff4400', W()/2, H()/2, true);
       sfx.boom?.() ?? sfx.fail();
       scheduleQuakes();
-    }, 8000);
+    }, 12000);
   }
 
   function scheduleQuakes(){
@@ -356,9 +357,66 @@ export function launch(app, state, onComplete) {
           '📡 Redundancy = multiple paths = fault-tolerant network',
         ],
         coins:totalCoins, color:'#ffd700',
-        onContinue: (action,s) => { cleanup(); if(action!=='retry') onComplete(s,totalCoins); else launch(app,state,onComplete); }
+        onContinue: (action,s) => {
+          if(action!=='retry'){ cleanup(); onComplete(s,totalCoins); }
+          else {
+            // retry from R3 only — don't restart from R1
+            totalCoins=0;
+            showRoundIntro(3, startRound3);
+          }
+        }
       });
     }, 2000);
+  }
+
+  // ── Round intro cards (shown before R2 and R3) ────────────────────────────
+  const ROUND_INTROS = {
+    2: {
+      icon: '💰',
+      title: 'Round 2 — Road Tax',
+      lines: [
+        'Every road costs credits based on its length.',
+        'Connect all buildings without busting the budget.',
+        '★ Use exactly N−1 edges = Minimum Spanning Tree!',
+        'Tap a road to remove it and reclaim its cost.',
+      ],
+    },
+    3: {
+      icon: '🌍',
+      title: 'Round 3 — Earthquake!',
+      lines: [
+        'You have 12 seconds to build your network.',
+        'Then a quake strikes and severs random roads.',
+        'Buildings with only ONE path will go offline.',
+        '★ Tip: add backup (redundant) paths to survive!',
+      ],
+    },
+  };
+
+  function showRoundIntro(roundNum, onReady) {
+    const info = ROUND_INTROS[roundNum];
+    if (!info) { onReady(); return; }
+    const overlay = document.createElement('div');
+    overlay.style.cssText=`position:absolute;inset:0;background:rgba(0,0,0,0.88);
+      display:flex;align-items:center;justify-content:center;z-index:160;`;
+    const card = document.createElement('div');
+    card.style.cssText=`background:#0d1f0d;border:1px solid #ffd70066;border-radius:20px;
+      padding:28px 24px;width:min(360px,92vw);text-align:center;`;
+    card.innerHTML=`
+      <div style="font-size:38px;margin-bottom:8px;">${info.icon}</div>
+      <div style="font-size:17px;font-weight:700;color:#ffd700;margin-bottom:16px;">${info.title}</div>
+      ${info.lines.map(l=>l.startsWith('★')
+        ?`<div style="font-size:12px;color:#ffdd44;margin-top:8px;text-align:left;padding:6px 10px;background:rgba(255,215,0,0.1);border-radius:8px;">${l}</div>`
+        :`<div style="font-size:13px;color:#ccc;margin-top:6px;text-align:left;">${l}</div>`
+      ).join('')}
+      <button id="go-btn" style="margin-top:22px;width:100%;padding:14px;border-radius:12px;border:none;
+        background:#ffd700;color:#000;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;">
+        Let's go! ▶
+      </button>
+    `;
+    overlay.appendChild(card);
+    root.appendChild(overlay);
+    card.querySelector('#go-btn').addEventListener('click',()=>{ overlay.remove(); onReady(); });
   }
 
   // ── Between-rounds transition ──────────────────────────────────────────────
@@ -397,6 +455,29 @@ export function launch(app, state, onComplete) {
     return -1;
   }
 
+  function findRoadAt(x,y){
+    const tol=12;
+    for(let i=0;i<roads.length;i++){
+      const r=roads[i]; if(r.severed) continue;
+      const a=buildings[r.a],b=buildings[r.b];
+      const dx=b.x-a.x,dy=b.y-a.y,lenSq=dx*dx+dy*dy;
+      if(lenSq===0) continue;
+      const t=Math.max(0,Math.min(1,((x-a.x)*dx+(y-a.y)*dy)/lenSq));
+      const dist=Math.hypot(x-(a.x+t*dx),y-(a.y+t*dy));
+      if(dist<tol) return i;
+    }
+    return -1;
+  }
+
+  function removeRoad(idx){
+    roads.splice(idx,1);
+    if(round===2) r2Spent=roads.reduce((s,r)=>{ const a=buildings[r.a],b=buildings[r.b]; return s+Math.hypot(b.x-a.x,b.y-a.y); },0);
+    updateReachable();
+    if(round===1) updateHUD1();
+    if(round===2) updateHUD2();
+    sfx.fail();
+  }
+
   function onDown(e){ e.preventDefault(); const {x,y}=canvasXY(e); const idx=findBuilding(x,y); if(idx>=0){dragFrom=idx;dragPos={x,y};} }
   function onMove(e){ e.preventDefault(); if(dragFrom===null)return; dragPos=canvasXY(e); }
   function onUp(e){
@@ -409,16 +490,23 @@ export function launch(app, state, onComplete) {
         else {
           roads.push({a:dragFrom,b:idx,severed:false});
           sfx.pop(); updateReachable();
-          if(round===1){ updateHUD1(); checkWin1(); }
+          if(round===1){ firstDragDone=true; updateHUD1(); checkWin1(); }
         }
       }
+    } else if(idx<0){
+      // No building at release point — check if tapping a road to remove it
+      const ri=findRoadAt(x,y);
+      if(ri>=0&&round!==3) removeRoad(ri);
     }
     dragFrom=null; dragPos=null;
   }
 
+  function onContextMenu(e){ e.preventDefault(); } // suppress right-click menu on canvas
+
   canvas.addEventListener('mousedown',onDown);
   canvas.addEventListener('mousemove',onMove);
   canvas.addEventListener('mouseup',onUp);
+  canvas.addEventListener('contextmenu',onContextMenu);
   canvas.addEventListener('touchstart',onDown,{passive:false});
   canvas.addEventListener('touchmove',onMove,{passive:false});
   canvas.addEventListener('touchend',onUp,{passive:false});
@@ -532,6 +620,19 @@ export function launch(app, state, onComplete) {
       c.restore();
     }
 
+    // First-play drag tutorial overlay
+    if(round===1&&!firstDragDone&&buildings.length){
+      const pal=buildings[0], tip=buildings[1]||buildings[0];
+      const cx=(pal.x+tip.x)/2, cy=(pal.y+tip.y)/2-18;
+      c.save();
+      c.fillStyle='rgba(0,0,0,0.72)';
+      c.beginPath(); c.roundRect(cx-130,cy-18,260,36,10); c.fill();
+      c.fillStyle='#ffd700'; c.font='bold 13px monospace';
+      c.textAlign='center'; c.textBaseline='middle';
+      c.fillText('👆 Drag from 🏰 Palace to any building!',cx,cy);
+      c.restore();
+    }
+
     // Flash messages
     flashMsgs=flashMsgs.filter(m=>m.life>0);
     for(const m of flashMsgs){
@@ -557,7 +658,7 @@ export function launch(app, state, onComplete) {
       c.fillStyle=pct>0.9?'#ff4444':pct>0.7?'#ffdd44':'#44ff88';
       c.beginPath();c.roundRect(bx,by,bw*pct,10,5);c.fill();
       c.fillStyle='#fff';c.font='9px monospace';c.textAlign='center';c.textBaseline='middle';
-      c.fillText(`Budget: ${Math.round(r2Spent)}/${r2Budget}px`,w/2,by+5);
+      c.fillText(`Budget: ${Math.round(r2Spent)}/${r2Budget} credits`,w/2,by+5);
     }
   }
 
@@ -606,6 +707,7 @@ export function launch(app, state, onComplete) {
     canvas.removeEventListener('mousedown',onDown);
     canvas.removeEventListener('mousemove',onMove);
     canvas.removeEventListener('mouseup',onUp);
+    canvas.removeEventListener('contextmenu',onContextMenu);
     canvas.removeEventListener('touchstart',onDown);
     canvas.removeEventListener('touchmove',onMove);
     canvas.removeEventListener('touchend',onUp);

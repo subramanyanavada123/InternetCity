@@ -24,7 +24,7 @@ const STRINGS = {
     'ui.complete': '◈ Mission Complete',
     // Module titles
     'm1.title': 'Delivery Kingdom',
-    'm1.sub': '3 rounds · MST · Earthquake!',
+    'm1.sub': 'Connect cities · survive the quake',
     'm2.title': 'Water Park',
     'm2.sub': 'Pipes, gates & flow',
     'm3.title': 'Rocket Launch',
@@ -130,7 +130,7 @@ const STRINGS = {
     'ui.complete': '◈ ಮಿಷನ್ ಪೂರ್ಣ',
     // Module titles
     'm1.title': 'ವಿತರಣಾ ರಾಜ್ಯ',
-    'm1.sub': '3 ಸುತ್ತು · MST · ಭೂಕಂಪ!',
+    'm1.sub': 'ನಗರ ಸಂಪರ್ಕಿಸಿ · ಭೂಕಂಪ ಬದುಕಿ',
     'm2.title': 'ನೀರಿನ ಉದ್ಯಾನ',
     'm2.sub': 'ಪೈಪ್, ಗೇಟ್ ಮತ್ತು ಹರಿವು',
     'm3.title': 'ರಾಕೆಟ್ ಉಡಾವಣೆ',

@@ -65,6 +65,7 @@ export function launch(app, state, onComplete) {
   let ended      = false;
   let lastNow    = null, rafId  = null;
   let nextPoolIdx = 0;
+  let congestionTutShown = false; // first-congestion tutorial flag
 
   const wx = fx => fx * W();
   const wy = fy => fy * H();
@@ -127,6 +128,14 @@ export function launch(app, state, onComplete) {
       else p.heat=Math.max(0,p.heat-dt*2);
       if(p.upgFlash>0) p.upgFlash-=dt*3;
     });
+
+    // First-congestion tutorial: show hint when a pipe first overloads
+    if(!congestionTutShown && pipes.some(p=>p.load>p.cap)){
+      congestionTutShown=true;
+      const hotPipe=pipes.find(p=>p.load>p.cap);
+      const {x1,y1,x2,y2}=pipeEnds(hotPipe);
+      float((x1+x2)/2,(y1+y2)/2-55,'👆 TAP RED PIPE to add a lane!','#ffd700');
+    }
 
     packets=packets.filter(pk=>{
       if(pk.dropped){ pk.dropLife-=dt*2.5; pk.y-=40*dt; return pk.dropLife>0; }

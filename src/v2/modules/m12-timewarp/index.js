@@ -57,13 +57,25 @@ export function launch(app, state, onComplete) {
     route = []; boosters = []; signal = null;
     elapsedMs = 0; flashAlpha = 0; phase = 'setup';
     sourceIdx = Math.floor(Math.random() * CITIES.length);
-    let farthest = 0, maxDist = 0;
+
+    // Build sorted list of other cities by distance
+    const others = [];
     for (let i = 0; i < CITIES.length; i++) {
       if (i === sourceIdx) continue;
       const d = Math.hypot(CITIES[i].fx - CITIES[sourceIdx].fx, CITIES[i].fy - CITIES[sourceIdx].fy);
-      if (d > maxDist) { maxDist = d; farthest = i; }
+      others.push({ i, d });
     }
-    destIdx = farthest;
+    others.sort((a, b) => a.d - b.d);
+
+    // Round 0 = short/medium, Round 1 = medium, Round 2 = long/far
+    // Split into thirds: short = bottom third, medium = middle, far = top third
+    const third = Math.floor(others.length / 3);
+    let pool;
+    if (roundIdx === 0) pool = others.slice(0, third + 1);       // short
+    else if (roundIdx === 1) pool = others.slice(third, third * 2 + 1); // medium
+    else pool = others.slice(-third - 1);                         // far
+
+    destIdx = pool[Math.floor(Math.random() * pool.length)].i;
     route = [sourceIdx];
     updateHUD();
   }

@@ -155,7 +155,7 @@ export function launch(app, state, onComplete) {
 
   // Power button handlers
   freezeBtn.addEventListener('click', () => {
-    if (!powers.freeze || gameOver || showingRoundOverlay) return;
+    if (!powers.freeze || gameOver) return;
     powers.freeze = false;
     frozen = true;
     frozenTimer = 3000;
@@ -164,7 +164,7 @@ export function launch(app, state, onComplete) {
     sfx.pop();
   });
   shieldBtn.addEventListener('click', () => {
-    if (!powers.shield || gameOver || showingRoundOverlay) return;
+    if (!powers.shield || gameOver) return;
     powers.shield = false;
     shieldActive = true;
     shieldBtn.style.opacity = '0.35';
@@ -172,7 +172,7 @@ export function launch(app, state, onComplete) {
     sfx.pop();
   });
   scanBtn.addEventListener('click', () => {
-    if (!powers.scan || gameOver || showingRoundOverlay) return;
+    if (!powers.scan || gameOver) return;
     powers.scan = false;
     scanActive = true;
     scanTimer = 5000;

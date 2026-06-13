@@ -345,6 +345,68 @@ export function launch(app, state, onComplete) {
     }
   }
 
+  // ── Encapsulation animation — shown before Round 1 ────────────────────────
+  function showEncapsulation(onDone) {
+    const panel = document.createElement('div');
+    panel.style.cssText = `position:absolute;inset:0;background:#0a0800;z-index:100;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
+      overflow:hidden;`;
+
+    const title = document.createElement('div');
+    title.style.cssText = 'color:#ff9f43;font-size:13px;letter-spacing:3px;font-weight:700;margin-bottom:12px;text-transform:uppercase;';
+    title.textContent = '📨 How data travels through OSI layers';
+    panel.appendChild(title);
+
+    // The "email" content core
+    const emailBox = document.createElement('div');
+    emailBox.style.cssText = `
+      font-size:13px;font-weight:700;color:#fff;
+      background:#1a1200;border:2px solid #ff9f43;border-radius:8px;
+      padding:6px 18px;margin-bottom:6px;white-space:nowrap;
+      box-shadow:0 0 10px #ff9f4344;
+    `;
+    emailBox.textContent = '📧  "Hello, world!"  (your email)';
+    panel.appendChild(emailBox);
+
+    // Build each layer envelope one by one
+    const layerEls = [];
+    LAYERS.forEach((L, i) => {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = `
+        width:${220 + i*28}px;background:${L.color}18;border:2px solid ${L.color}88;
+        border-radius:8px;padding:4px 10px;display:flex;align-items:center;gap:8px;
+        opacity:0;transform:translateY(-12px);transition:opacity 0.35s,transform 0.35s;
+        font-size:11px;color:${L.color};font-weight:700;margin-bottom:4px;
+      `;
+      wrap.innerHTML = `<span style="font-size:16px">${L.emoji}</span><span>Layer ${L.num}: ${L.name}</span>`;
+      panel.appendChild(wrap);
+      layerEls.push(wrap);
+    });
+
+    const skipBtn = document.createElement('button');
+    skipBtn.style.cssText = `margin-top:18px;padding:10px 30px;border-radius:10px;border:none;
+      background:#ff9f43;color:#000;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;`;
+    skipBtn.textContent = 'Start Round 1 ▶';
+    skipBtn.style.opacity = '0';
+    skipBtn.style.transition = 'opacity 0.4s';
+    skipBtn.onclick = () => { panel.remove(); onDone(); };
+    panel.appendChild(skipBtn);
+
+    root.appendChild(panel);
+
+    // Animate layers appearing one by one (bottom layer = Physical = wraps first)
+    const revOrder = [...layerEls].reverse(); // Physical first, Application last
+    revOrder.forEach((el, i) => {
+      to(() => {
+        el.style.opacity = '1';
+        el.style.transform = 'translateY(0)';
+        sfx.pop && sfx.pop();
+      }, 300 + i * 350);
+    });
+    // Show button after all layers revealed
+    to(() => { skipBtn.style.opacity = '1'; }, 300 + LAYERS.length * 350 + 200);
+  }
+
   showLessonBanner(root, {
     concept: t('m8.concept'),
     detail: t('m8.banner'),
@@ -359,7 +421,7 @@ export function launch(app, state, onComplete) {
     color: '#ff9f43',
     onStart: () => {
       hud.setLeft('🏗️ Tower of Babel');
-      round1();
+      showEncapsulation(() => round1());
     },
   });
 }

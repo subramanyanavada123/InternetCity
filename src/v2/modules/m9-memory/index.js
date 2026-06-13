@@ -26,7 +26,8 @@ export function launch(app, state, onComplete) {
   // ── State ──────────────────────────────────────────────────────────────────
   let cache=[],queue=[],score=0,happiness=100,timeLeft=GAME_TIME,served=0,custServed=0;
   let fetchingIdx=-1,fetchProgress=0,fetchTimer=null,hintItem=null;
-  let gameOver=false,raf=null,lastTs=null,custTimer=0;
+  let gameOver=false,paused=false,raf=null,lastTs=null,custTimer=0;
+  let firstEvictionDone=false;
 
   queue.push(makeCustomer()); queue.push(makeCustomer());
 
@@ -46,11 +47,34 @@ export function launch(app, state, onComplete) {
   // ── Cache (LRU) ────────────────────────────────────────────────────────────
   function cacheHas(i){ return cache.includes(i); }
   function cacheTouch(i){ cache=cache.filter(x=>x!==i); cache.push(i); }
+  function showEvictionExplainer(evictedEmoji) {
+    paused = true;
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `position:absolute;inset:0;background:rgba(0,0,0,0.78);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+      z-index:150;animation:coinPop 0.35s ease;`;
+    overlay.innerHTML = `
+      <div style="font-size:42px">${evictedEmoji}</div>
+      <div style="font-size:18px;font-weight:700;color:#ff8c00;">💡 LRU: Oldest unused item removed!</div>
+      <div style="font-size:13px;color:#ccc;max-width:280px;text-align:center;line-height:1.6;">
+        Cache is full. The <strong style="color:#ffd700">least recently used</strong> item gets evicted to make room.
+        Pre-cache popular items early!
+      </div>
+    `;
+    root.appendChild(overlay);
+    setTimeout(() => {
+      overlay.remove();
+      paused = false;
+      lastTs = null; // reset dt to avoid jump
+    }, 2200);
+  }
+
   function cacheAdd(i){
     if(cacheHas(i)){cacheTouch(i);return;}
     if(cache.length>=CACHE_SIZE){
       const ev=cache.shift(); const l=lo();
       float(root,l.mw/2,l.midY-20,`EVICTED: ${ITEMS[ev]}`,'#ff8c00');
+      if(!firstEvictionDone){ firstEvictionDone=true; showEvictionExplainer(ITEMS[ev]); }
     }
     cache.push(i);
   }
@@ -230,6 +254,7 @@ export function launch(app, state, onComplete) {
   function loop(ts){
     if(gameOver) return;
     raf=requestAnimationFrame(loop);
+    if(paused){ lastTs=ts; drawAll(ts); return; }
     if(lastTs===null) lastTs=ts;
     const dt=Math.min((ts-lastTs)/1000,0.1); lastTs=ts;
     timeLeft-=dt; if(timeLeft<=0){timeLeft=0;endGame();return;}

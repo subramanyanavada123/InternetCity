@@ -1,6 +1,7 @@
 // Internet City V2 — main router
 import { loadState, saveState, completeModule, awardCoins } from './shared/state.js';
 import { showHome } from './screens/home.js';
+import { showOnboarding } from './screens/onboarding.js';
 
 const app = document.getElementById('app');
 let state = loadState();
@@ -44,4 +45,13 @@ async function loadModule(id) {
   });
 }
 
-navigate('home');
+// Show onboarding only on very first visit
+if (!state.onboardingDone && (state.completedModules || []).length === 0) {
+  showOnboarding(app, () => {
+    state.onboardingDone = true;
+    saveState(state);
+    navigate('home');
+  });
+} else {
+  navigate('home');
+}

@@ -3,11 +3,12 @@ import { makeHUD, makeCard, showStarResult, showIntro, showLessonBanner } from '
 import { sfx } from '../../shared/sfx.js';
 import { t } from '../../shared/i18n.js';
 
+// Priority 4=highest (EMERGENCY), 1=lowest (LOW). Numbers shown as rank 1–4 from top.
 const TYPES = [
-  { id: 'medical',   emoji: '🚑', label: 'EMERGENCY', priority: 4, color: '#ff6b6b' },
-  { id: 'satellite', emoji: '🛰',  label: 'CRITICAL',  priority: 3, color: '#c9b6ff' },
-  { id: 'gifts',     emoji: '🎁',  label: 'NORMAL',    priority: 2, color: '#ffd700' },
-  { id: 'pizza',     emoji: '🍕',  label: 'LOW',       priority: 1, color: '#ff9944' },
+  { id: 'medical',   emoji: '🚑', label: 'EMERGENCY', priority: 4, rank: 1, color: '#ff6b6b' },
+  { id: 'satellite', emoji: '🛰',  label: 'CRITICAL',  priority: 3, rank: 2, color: '#c9b6ff' },
+  { id: 'gifts',     emoji: '🎁',  label: 'NORMAL',    priority: 2, rank: 3, color: '#ffd700' },
+  { id: 'pizza',     emoji: '🍕',  label: 'LOW',       priority: 1, rank: 4, color: '#ff9944' },
 ];
 
 let uid = 0;
@@ -188,9 +189,9 @@ export function launch(app, state, onComplete) {
       <div class="m3-card-emoji">${rocket.emoji}</div>
       <div class="m3-card-info">
         <div class="m3-card-label" style="color:${rocket.color}">${rocket.label}</div>
-        <div class="m3-card-pri">Priority ${rocket.priority}</div>
+        <div class="m3-card-pri">Launch order #${rocket.rank}</div>
       </div>
-      <div class="m3-badge" style="color:${rocket.color}">P${rocket.priority}</div>`;
+      <div class="m3-badge" style="color:${rocket.color}">#${rocket.rank}</div>`;
 
     // HTML5 drag
     card.addEventListener('dragstart', e => {
@@ -333,12 +334,13 @@ export function launch(app, state, onComplete) {
       sfx.launch();
       animateLaunchSuccess(launched_rocket.emoji, launched_rocket.color);
       flashScreen('green');
-      showFeedback(`✅ Correct! P${launched_rocket.priority} launched first`, '#46f0c0');
+      showFeedback(`✅ Correct! ${launched_rocket.label} launched first`, '#46f0c0');
     } else {
+      const urgentRocket = queue.find(r => r.priority === topPriority) || launched_rocket;
       score = Math.max(0, score - 20);
       sfx.fail();
       flashScreen('red');
-      showFeedback(`❌ Wrong order! P${topPriority} should launch first`, '#ff6b6b');
+      showFeedback(`❌ Wrong! ${urgentRocket.label} should launch first`, '#ff6b6b');
     }
 
     launchCountdown = 8;

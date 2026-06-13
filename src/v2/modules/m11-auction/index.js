@@ -18,7 +18,6 @@ const PRIORITY_WEIGHT = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
 
 const ROUND_CONFIG = [
   { label:'Normal Operations', pool:150, surgeIds:[] },
-  { label:'SURGE EVENT',       pool:150, surgeIds:['hospital','fire'] },
   { label:'BLACKOUT',          pool:80,  surgeIds:[] },
 ];
 
@@ -324,8 +323,9 @@ export function launch(app, state, onComplete) {
   }
 
   // ── Timer ─────────────────────────────────────────────────────────────────
+  const ROUND_TIMER = 20;
   function startTimer() {
-    timeLeft = 30; updateTimerUI();
+    timeLeft = ROUND_TIMER; updateTimerUI();
     timerInterval = setInterval(() => {
       timeLeft--; updateTimerUI();
       if (timeLeft <= 0) { clearInterval(timerInterval); timerInterval = null; onConfirm(); }
@@ -334,7 +334,7 @@ export function launch(app, state, onComplete) {
   function updateTimerUI() {
     const el = document.getElementById('m11-timer'), bar = document.getElementById('m11-timer-bar');
     if (el) el.textContent = timeLeft + 's';
-    if (bar) bar.style.width = (timeLeft / 30 * 100) + '%';
+    if (bar) bar.style.width = (timeLeft / ROUND_TIMER * 100) + '%';
   }
 
   // ── Round lifecycle ───────────────────────────────────────────────────────
@@ -344,11 +344,11 @@ export function launch(app, state, onComplete) {
     const lbl = document.getElementById('m11-round-label');
     if (lbl) {
       const cfg = ROUND_CONFIG[round];
-      lbl.textContent = `Round ${round + 1}/3 — ${cfg.label}`;
-      lbl.style.color = round === 2 ? '#ff6b6b' : round === 1 ? '#ffb347' : '#fff';
+      lbl.textContent = `Round ${round + 1}/${ROUND_CONFIG.length} — ${cfg.label}`;
+      lbl.style.color = round === ROUND_CONFIG.length - 1 ? '#ff6b6b' : round === 1 ? '#ffb347' : '#fff';
     }
     hud.setLeft(`Score: ${totalScore}`);
-    hud.setRight(`Round ${round + 1} / 3`);
+    hud.setRight(`Round ${round + 1} / ${ROUND_CONFIG.length}`);
     updatePoolBar();
     bidders.forEach(b => updateCard(b.id));
     confirmBtn.disabled = false;
@@ -383,7 +383,7 @@ export function launch(app, state, onComplete) {
       }, i * 90);
     });
 
-    setTimeout(() => showRoundResult(roundScore, round >= 2), 1400);
+    setTimeout(() => showRoundResult(roundScore, round >= ROUND_CONFIG.length - 1), 1400);
   }
 
   function showRoundResult(roundScore, isLast) {

@@ -268,18 +268,13 @@ export function launch(app, state, onComplete) {
   }
 
   // ── Input ──────────────────────────────────────────────────────────────────
+  let pointerDownPos = null;
+
   function onDown(e) {
     e.preventDefault();
     const { x, y } = canvasXY(e);
-    // Check if tapping a switch to toggle
-    for (const sw of switches) {
-      if (Math.hypot(sw.x - x, sw.y - y) < NODE_R + 10) {
-        sw.val = sw.val ? 0 : 1;
-        sfx.coin();
-        return;
-      }
-    }
-    // Start wire drag from an output node
+    pointerDownPos = { x, y };
+    // Start wire drag from an output node (allow dragging from switch output too)
     const n = nearestNode(x, y, 'out');
     if (n) dragging = { fromId: n.id, x: n.x, y: n.y, curX: x, curY: y };
   }
@@ -294,11 +289,38 @@ export function launch(app, state, onComplete) {
 
   function onUp(e) {
     e.preventDefault();
-    if (!dragging) return;
     const { x, y } = canvasXY(e);
-    const n = nearestNode(x, y, 'in');
-    if (n) onWireComplete(dragging.fromId, n.id);
-    dragging = null;
+    const moved = pointerDownPos ? Math.hypot(x - pointerDownPos.x, y - pointerDownPos.y) : 999;
+    pointerDownPos = null;
+
+    if (dragging) {
+      if (moved > 8) {
+        // Treat as wire drag completion
+        const n = nearestNode(x, y, 'in');
+        if (n) onWireComplete(dragging.fromId, n.id);
+      } else {
+        // Short tap: toggle switch if near one
+        for (const sw of switches) {
+          if (Math.hypot(sw.x - x, sw.y - y) < NODE_R + 10) {
+            sw.val = sw.val ? 0 : 1;
+            sfx.coin();
+            break;
+          }
+        }
+      }
+      dragging = null;
+    } else {
+      // No drag started — short tap on switch toggles it
+      if (moved <= 8) {
+        for (const sw of switches) {
+          if (Math.hypot(sw.x - x, sw.y - y) < NODE_R + 10) {
+            sw.val = sw.val ? 0 : 1;
+            sfx.coin();
+            break;
+          }
+        }
+      }
+    }
   }
 
   canvas.addEventListener('mousedown', onDown);

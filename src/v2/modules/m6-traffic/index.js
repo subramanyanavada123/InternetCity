@@ -140,6 +140,7 @@ export function launch(app, state, onComplete) {
   let selectedRoad   = null;
   let shortcutFrom   = null;   // district index for two-click shortcut
   let upgradeAnim    = null;   // { road, t } — t 0→1
+  let upgradeCount   = 0;      // how many upgrades/shortcuts the player made
 
   let gameOver = false;
   let raf = null;
@@ -278,6 +279,7 @@ export function launch(app, state, onComplete) {
       r.capacity += 1;
       r.upgraded = true;
       coins -= UPGRADE_COST;
+      upgradeCount++;
       upgradeAnim = { road: r, t: 0 };
       sfx.coin();
       if (wasRed && r.load / r.capacity <= 0.8) {
@@ -350,6 +352,7 @@ export function launch(app, state, onComplete) {
             } else {
               roads.push({ a: shortcutFrom, b: di, capacity: 2, load: 0, upgraded: true });
               coins -= SHORTCUT_COST;
+              upgradeCount++;
               sfx.coin();
               makeFloat(root, (districts[shortcutFrom].x + districts[di].x) / 2,
                               (districts[shortcutFrom].y + districts[di].y) / 2, '🛣️');
@@ -703,11 +706,13 @@ export function launch(app, state, onComplete) {
     updateLoads();
     const finalHappiness = happiness; // already 0-100
     let stars = 0;
-    if (finalHappiness > 25) stars = 1;
-    if (finalHappiness > 45) stars = 2;
-    if (finalHappiness > 65) stars = 3;
+    // Require at least 1 upgrade action to earn more than 0 stars;
+    // and meaningful happiness for higher stars
+    if (finalHappiness > 25 && upgradeCount >= 1) stars = 1;
+    if (finalHappiness > 45 && upgradeCount >= 2) stars = 2;
+    if (finalHappiness > 65 && upgradeCount >= 3) stars = 3;
 
-    const coinsEarned = stars * 40 + (coins - BUDGET < 0 ? 0 : coins - BUDGET);
+    const coinsEarned = stars * 40;
     const titles = ['City in Chaos!', 'City Survived!', 'City Flowing!', 'Traffic Master! 🏆'];
 
     sfx[stars >= 2 ? 'win' : 'fail']();
@@ -718,8 +723,8 @@ export function launch(app, state, onComplete) {
         title: titles[stars],
         lines: [
           `Final happiness: ${Math.round(finalHappiness)}%`,
-          `Coins remaining: ${coins}🪙`,
-          stars < 3 ? 'Upgrade bottleneck roads earlier!' : 'Perfect traffic management!',
+          `Upgrades made: ${upgradeCount}`,
+          stars < 3 ? 'Upgrade congested roads (red) to improve happiness!' : 'Perfect traffic management!',
         ],
         coins: coinsEarned,
         color: '#46f0c0',
