@@ -330,13 +330,15 @@ export function launch(app, state, onComplete) {
   function finaliseR3(){
     if(roundDone) return;
     roundDone=true;
-    sfx.win();
-    spawnConfetti();
     const surviving=reachable.size-1;
     const total=buildings.length-1;
     const stars=surviving===total?3:surviving>=Math.ceil(total*0.7)?2:surviving>=Math.ceil(total*0.4)?1:0;
     totalCoins+=stars*20;
-    flashMsg(surviving===total?'ALL NODES SURVIVED! 🏆':'NETWORK PARTIALLY SURVIVED', surviving===total?'#ffd700':'#ffdd44', W()/2, H()/2, true);
+    if(stars>0) sfx.win(); else sfx.fail();
+    if(stars>0) spawnConfetti();
+    const flashText=stars===3?'ALL NODES SURVIVED! 🏆':stars>=2?'MOSTLY SURVIVED 💪':stars===1?'PARTIAL SURVIVAL ⚡':'NETWORK COLLAPSED ☠';
+    const flashColor=stars===3?'#ffd700':stars>=2?'#ffdd44':stars===1?'#ff9944':'#ff4444';
+    flashMsg(flashText, flashColor, W()/2, H()/2, true);
     setTimeout(()=>{
       showStarResult(root,{
         stars, maxStars:3,

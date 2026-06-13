@@ -285,10 +285,9 @@ export function launch(app, state, onComplete) {
   });
 
   // ── Click ─────────────────────────────────────────────────────────────────
-  canvas.addEventListener('click',e=>{
+  function handleTap(mx,my){
     if(phase!=='build') return;
-    const {x:mx,y:my}=canvasXY(e);
-    const hit=allNodes().find(n=>Math.hypot(n.x-mx,n.y-my)<32);
+    const hit=allNodes().find(n=>Math.hypot(n.x-mx,n.y-my)<36);
     if(!hit){ selected=null; return; }
     sfx.coin();
     if(!selected){ selected=hit; tutStep=Math.max(tutStep,1); return; }
@@ -297,14 +296,21 @@ export function launch(app, state, onComplete) {
     const isCore=coreLinks.some(l=>(l.a===selected.id&&l.b===hit.id)||(l.b===selected.id&&l.a===hit.id));
     if(!dup&&!isCore&&backupLinks.length<MAX_BL){
       backupLinks.push({a:selected.id,b:hit.id});
-      sfx.pop();
-      tutStep=2;
+      sfx.pop(); tutStep=2;
     } else { sfx.block(); }
     selected=null;
+  }
+
+  let lastTouch=0;
+  canvas.addEventListener('click',e=>{
+    // Ignore clicks synthesised within 400ms of a touch (avoid double-fire)
+    if(performance.now()-lastTouch<400) return;
+    const {x,y}=canvasXY(e); handleTap(x,y);
   });
   canvas.addEventListener('touchend',e=>{
     e.preventDefault();
-    canvas.dispatchEvent(new MouseEvent('click',{clientX:e.changedTouches[0].clientX,clientY:e.changedTouches[0].clientY}));
+    lastTouch=performance.now();
+    const {x,y}=canvasXY(e); handleTap(x,y);
   },{passive:false});
 
   // ── Wave system ───────────────────────────────────────────────────────────
